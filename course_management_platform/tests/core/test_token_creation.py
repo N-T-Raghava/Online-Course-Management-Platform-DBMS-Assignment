@@ -1,9 +1,9 @@
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "backend"))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from app.core.jwt_handler import create_access_token, decode_access_token
+from backend.app.core.jwt_handler import create_access_token, decode_access_token
 
 data = {
     "user_id": 1,
