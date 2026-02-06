@@ -1,8 +1,14 @@
+import sys
+from pathlib import Path
+
+# Ensure backend package is importable
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "backend"))
+
 import pytest
 from sqlalchemy import text
 
-from backend.app.database import SessionLocal
-from backend.app.models import (
+from app.database import SessionLocal
+from app.models import (
     User,
     Student,
     Instructor,
@@ -98,13 +104,3 @@ def test_statistics_tables_accessible(db):
     db.query(Statistics).limit(1).all()
     db.query(StudentStatistics).limit(1).all()
     db.query(InstructorStatistics).limit(1).all()
-
-
-# --------------------------------------------------
-# 8️⃣ Basic Count Smoke Test
-# --------------------------------------------------
-
-def test_counts_non_negative(db):
-    assert db.query(User).count() >= 0
-    assert db.query(Course).count() >= 0
-    assert db.query(Enrollment).count() >= 0
