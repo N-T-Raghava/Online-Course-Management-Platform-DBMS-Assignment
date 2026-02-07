@@ -2,36 +2,67 @@ from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 from datetime import date
 
-# Register Schema
+
+# ============================================================
+# REGISTER REQUEST — ROLE DYNAMIC
+# ============================================================
+
 class RegisterRequest(BaseModel):
+
+    # --------------------------------------------------------
+    # BASE USER FIELDS (REQUIRED)
+    # --------------------------------------------------------
+
     name: str = Field(..., min_length=2, max_length=100)
+
     email: EmailStr
+
     password: str = Field(..., min_length=6)
-    phone_number: Optional[str]
+
+    phone_number: Optional[str] = None
 
     role: str = Field(
         ...,
         description="Student / Instructor / Administrator / DataAnalyst"
     )
 
-    # --- Student Fields ---
-    date_of_birth: Optional[date]
-    country: Optional[str]
-    gender: Optional[str]
-    education_level: Optional[str]
+    # --------------------------------------------------------
+    # STUDENT FIELDS (OPTIONAL)
+    # --------------------------------------------------------
 
-    # --- Instructor Fields ---
-    qualification: Optional[str]
-    experience: Optional[int]
-    expertise_area: Optional[str]
-    bio: Optional[str]
+    date_of_birth: Optional[date] = None
 
-    # --- Admin Fields ---
-    admin_level: Optional[str]
-    assigned_since: Optional[date]
+    country: Optional[str] = None
 
-    # --- Analyst Fields ---
-    analyst_qualification: Optional[str]
+    gender: Optional[str] = None
+
+    education_level: Optional[str] = None
+
+    # --------------------------------------------------------
+    # INSTRUCTOR FIELDS (OPTIONAL)
+    # --------------------------------------------------------
+
+    qualification: Optional[str] = None
+
+    experience: Optional[int] = None
+
+    expertise_area: Optional[str] = None
+
+    bio: Optional[str] = None
+
+    # --------------------------------------------------------
+    # ADMINISTRATOR FIELDS (OPTIONAL)
+    # --------------------------------------------------------
+
+    admin_level: Optional[str] = None
+
+    assigned_since: Optional[date] = None
+
+    # --------------------------------------------------------
+    # ANALYST FIELDS (OPTIONAL)
+    # --------------------------------------------------------
+
+    analyst_qualification: Optional[str] = None
 
 
 # Login Schema
