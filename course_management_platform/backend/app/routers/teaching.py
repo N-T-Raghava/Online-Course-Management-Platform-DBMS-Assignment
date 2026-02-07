@@ -10,19 +10,24 @@ from app.repositories.participation_repo import (
     get_instructors_by_course
 )
 
-# Router Config
+# 🔐 Role Guards
+from app.core.role_guards import require_role
+from app.core.roles import Role
 
+# Router Config
 router = APIRouter(
     prefix="/teaching",
     tags=["Participation - Teaching"]
 )
 
-# Assign Instructor
-
+# ------------------------------------------------------------
+# Assign Instructor → Junior Admin +
+# ------------------------------------------------------------
 @router.post("/assign")
 def assign_instructor(
     payload: TeachingAssign,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    admin = Depends(require_role([Role.ADMIN]))
 ):
     return assign_instructor_service(
         db,
@@ -33,7 +38,9 @@ def assign_instructor(
     )
 
 
-# Get Instructors By Course
+# ------------------------------------------------------------
+# Get Instructors By Course → OPEN
+# ------------------------------------------------------------
 @router.get("/course/{course_id}")
 def get_instructors(
     course_id: int,

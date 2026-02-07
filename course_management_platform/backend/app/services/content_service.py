@@ -6,24 +6,52 @@ from app.repositories import course_repo
 from app.repositories import user_repo
 from app.models.topic import Topic
 
+from app.repositories.participation_repo import get_teaching_assignment
+from app.core.roles import Role
 
 # UPLOAD CONTENT
+def upload_content_service(
+    db: Session,
+    payload,
+    current_user: dict
+):
 
-def upload_content_service(db: Session, payload):
+    # --------------------------------------------------------
+    # COURSE VALIDATION
+    # --------------------------------------------------------
 
-    # Validate course
     course = course_repo.get_course_by_id(
         db,
         payload.course_id
     )
 
     if not course:
-        raise HTTPException(
-            status_code=404,
-            detail="Course not found"
+        raise HTTPException(404, "Course not found")
+
+    # --------------------------------------------------------
+    # INSTRUCTOR OWNERSHIP CHECK
+    # --------------------------------------------------------
+
+    if current_user["role"] == Role.INSTRUCTOR.value:
+
+        teaching = get_teaching_assignment(
+            db,
+            current_user["user_id"],
+            payload.course_id
         )
 
-    # Validate instructor if provided
+        if not teaching:
+            raise HTTPException(
+                status_code=403,
+                detail="Instructor not assigned to this course"
+            )
+
+        payload.instructor_user_id = current_user["user_id"]
+
+    # --------------------------------------------------------
+    # ADMIN OVERRIDE
+    # --------------------------------------------------------
+
     if payload.instructor_user_id:
 
         user = user_repo.get_user_by_id(
@@ -32,12 +60,9 @@ def upload_content_service(db: Session, payload):
         )
 
         if not user or user.role.lower() != "instructor":
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid instructor"
-            )
+            raise HTTPException(400, "Invalid instructor")
 
-    # Validate topic if provided
+    # Topic validation
     if payload.topic_id:
 
         topic = db.query(Topic).filter(
@@ -45,20 +70,14 @@ def upload_content_service(db: Session, payload):
         ).first()
 
         if not topic:
-            raise HTTPException(
-                status_code=404,
-                detail="Topic not found"
-            )
+            raise HTTPException(404, "Topic not found")
 
-    # Insert content
     return content_repo.create_content(
         db,
         payload.dict()
     )
 
-
 # FETCH COURSE CONTENT
-
 def get_course_content_service(db: Session, course_id: int):
 
     course = course_repo.get_course_by_id(db, course_id)

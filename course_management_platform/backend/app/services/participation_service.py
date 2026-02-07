@@ -6,39 +6,42 @@ from app.repositories import participation_repo
 from app.repositories import user_repo
 from app.repositories import course_repo
 
-# ENROLLMENT SERVICES
+from app.core.roles import Role
+
 def enroll_student_service(
     db: Session,
     student_user_id: int,
-    course_id: int
+    course_id: int,
+    current_user: dict
 ):
+
+    # --------------------------------------------------------
+    # SELF ENROLLMENT CHECK
+    # --------------------------------------------------------
+
+    if current_user["role"] == Role.STUDENT.value:
+        if current_user["user_id"] != student_user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Students can enroll only themselves"
+            )
+
+    # Admin override allowed → no block
 
     # Validate user exists
     user = user_repo.get_user_by_id(db, student_user_id)
 
     if not user:
-        raise HTTPException(
-            status_code=404,
-            detail="User not found"
-        )
+        raise HTTPException(404, "User not found")
 
-    # Validate role = Student
     if user.role.lower() != "student":
-        raise HTTPException(
-            status_code=400,
-            detail="User is not a student"
-        )
+        raise HTTPException(400, "User is not a student")
 
-    # Validate course exists
     course = course_repo.get_course_by_id(db, course_id)
 
     if not course:
-        raise HTTPException(
-            status_code=404,
-            detail="Course not found"
-        )
+        raise HTTPException(404, "Course not found")
 
-    # Prevent duplicate enrollment
     existing = participation_repo.get_enrollment(
         db,
         student_user_id,
@@ -46,12 +49,8 @@ def enroll_student_service(
     )
 
     if existing:
-        raise HTTPException(
-            status_code=400,
-            detail="Student already enrolled"
-        )
+        raise HTTPException(400, "Student already enrolled")
 
-    # Create enrollment
     return participation_repo.create_enrollment(
         db,
         student_user_id,
@@ -65,8 +64,20 @@ def update_completion_service(
     student_user_id: int,
     course_id: int,
     completion_status: str,
-    completion_date: date | None
+    completion_date: date | None,
+    current_user: dict
 ):
+
+    # --------------------------------------------------------
+    # SELF COMPLETION CHECK
+    # --------------------------------------------------------
+
+    if current_user["role"] == Role.STUDENT.value:
+        if current_user["user_id"] != student_user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Students can update only their completion"
+            )
 
     enrollment = participation_repo.get_enrollment(
         db,
@@ -75,10 +86,7 @@ def update_completion_service(
     )
 
     if not enrollment:
-        raise HTTPException(
-            status_code=404,
-            detail="Enrollment not found"
-        )
+        raise HTTPException(404, "Enrollment not found")
 
     return participation_repo.update_completion(
         db,
@@ -89,14 +97,25 @@ def update_completion_service(
 
 
 # Rating Update
-
 def rate_course_service(
     db: Session,
     student_user_id: int,
     course_id: int,
     rating: int,
-    review_text: str | None
+    review_text: str | None,
+    current_user: dict
 ):
+
+    # --------------------------------------------------------
+    # SELF RATING CHECK
+    # --------------------------------------------------------
+
+    if current_user["role"] == Role.STUDENT.value:
+        if current_user["user_id"] != student_user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Students can rate only their courses"
+            )
 
     enrollment = participation_repo.get_enrollment(
         db,
@@ -105,10 +124,7 @@ def rate_course_service(
     )
 
     if not enrollment:
-        raise HTTPException(
-            status_code=404,
-            detail="Enrollment not found"
-        )
+        raise HTTPException(404, "Enrollment not found")
 
     return participation_repo.update_rating(
         db,

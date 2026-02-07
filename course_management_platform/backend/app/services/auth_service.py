@@ -1,3 +1,5 @@
+# backend/app/services/auth_service.py
+
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
@@ -7,11 +9,23 @@ from app.core.jwt_handler import create_access_token
 from app.repositories import user_repo
 from app.schemas.auth_schema import RegisterRequest
 
-# Register User
+from app.models.administrator import Administrator
+
+
+# ============================================================
+# REGISTER USER
+# ============================================================
+
 def register_user(db: Session, payload: RegisterRequest):
 
-    # Check duplicate email
-    existing_user = user_repo.get_user_by_email(db, payload.email)
+    # --------------------------------------------------------
+    # DUPLICATE EMAIL CHECK
+    # --------------------------------------------------------
+
+    existing_user = user_repo.get_user_by_email(
+        db,
+        payload.email
+    )
 
     if existing_user:
         raise HTTPException(
@@ -19,10 +33,16 @@ def register_user(db: Session, payload: RegisterRequest):
             detail="Email already registered"
         )
 
-    # Hash password
+    # --------------------------------------------------------
+    # HASH PASSWORD
+    # --------------------------------------------------------
+
     hashed_pw = hash_password(payload.password)
 
-    # Create base user
+    # --------------------------------------------------------
+    # CREATE BASE USER
+    # --------------------------------------------------------
+
     user_data = {
         "name": payload.name,
         "email": payload.email,
@@ -33,35 +53,58 @@ def register_user(db: Session, payload: RegisterRequest):
 
     user = user_repo.create_user(db, user_data)
 
-    # Insert subclass
+    # --------------------------------------------------------
+    # ISA INSERTS
+    # --------------------------------------------------------
+
     role = payload.role.lower()
 
     if role == "student":
-        user_repo.create_student(db, user.user_id, {
-            "date_of_birth": payload.date_of_birth,
-            "country": payload.country,
-            "gender": payload.gender,
-            "education_level": payload.education_level
-        })
+
+        user_repo.create_student(
+            db,
+            user.user_id,
+            {
+                "date_of_birth": payload.date_of_birth,
+                "country": payload.country,
+                "gender": payload.gender,
+                "education_level": payload.education_level
+            }
+        )
 
     elif role == "instructor":
-        user_repo.create_instructor(db, user.user_id, {
-            "qualification": payload.qualification,
-            "experience": payload.experience,
-            "expertise_area": payload.expertise_area,
-            "bio": payload.bio
-        })
+
+        user_repo.create_instructor(
+            db,
+            user.user_id,
+            {
+                "qualification": payload.qualification,
+                "experience": payload.experience,
+                "expertise_area": payload.expertise_area,
+                "bio": payload.bio
+            }
+        )
 
     elif role == "administrator":
-        user_repo.create_administrator(db, user.user_id, {
-            "admin_level": payload.admin_level,
-            "assigned_since": payload.assigned_since
-        })
+
+        user_repo.create_administrator(
+            db,
+            user.user_id,
+            {
+                "admin_level": payload.admin_level,
+                "assigned_since": payload.assigned_since
+            }
+        )
 
     elif role == "dataanalyst":
-        user_repo.create_data_analyst(db, user.user_id, {
-            "qualification": payload.analyst_qualification
-        })
+
+        user_repo.create_data_analyst(
+            db,
+            user.user_id,
+            {
+                "qualification": payload.analyst_qualification
+            }
+        )
 
     else:
         raise HTTPException(
@@ -71,10 +114,17 @@ def register_user(db: Session, payload: RegisterRequest):
 
     return user
 
-# Login User
+
+# ============================================================
+# LOGIN USER (JWT + ADMIN LEVEL)
+# ============================================================
+
 def login_user(db: Session, email: str, password: str):
 
-    # Fetch user
+    # --------------------------------------------------------
+    # FETCH USER
+    # --------------------------------------------------------
+
     user = user_repo.get_user_by_email(db, email)
 
     if not user:
@@ -83,18 +133,46 @@ def login_user(db: Session, email: str, password: str):
             detail="Invalid credentials"
         )
 
-    # Verify password
+    # --------------------------------------------------------
+    # VERIFY PASSWORD
+    # --------------------------------------------------------
+
     if not verify_password(password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials"
         )
 
-    # Generate token
+    # --------------------------------------------------------
+    # BASE PAYLOAD
+    # --------------------------------------------------------
+
     token_data = {
         "user_id": user.user_id,
         "role": user.role
     }
+
+    # --------------------------------------------------------
+    # ADMIN LEVEL PATCH
+    # --------------------------------------------------------
+
+    if user.role == "Administrator":
+
+        admin_record = db.query(Administrator).filter(
+            Administrator.user_id == user.user_id
+        ).first()
+
+        if not admin_record:
+            raise HTTPException(
+                status_code=500,
+                detail="Admin record missing"
+            )
+
+        token_data["admin_level"] = admin_record.admin_level
+
+    # --------------------------------------------------------
+    # CREATE TOKEN
+    # --------------------------------------------------------
 
     access_token = create_access_token(token_data)
 
