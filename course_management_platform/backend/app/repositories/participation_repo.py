@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from datetime import date
+from datetime import date, datetime
 
 from app.models.enrollment import Enrollment
 from app.models.teaching import Teaching
@@ -59,11 +60,16 @@ def update_rating(
     db: Session,
     enrollment: Enrollment,
     rating: int,
-    review_text: str | None
+    review_text: str | None,
+    is_public: bool | None = False
 ):
 
     enrollment.rating = rating
     enrollment.review_text = review_text
+    # Store whether review should be public
+    enrollment.is_review_public = bool(is_public)
+    # Record timestamp when rating was provided
+    enrollment.rated_at = datetime.utcnow()
 
     db.commit()
     db.refresh(enrollment)

@@ -1,0 +1,521 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ course.title }} - Learn{% endblock %}
+
+{% block extra_css %}
+<style>
+    .learn-wrapper {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 24px;
+        margin-top: 20px;
+        min-height: calc(100vh - 200px);
+    }
+
+    @media (max-width: 1024px) {
+        .learn-wrapper {
+            grid-template-columns: 1fr;
+        }
+        .sidebar { order: 2; }
+        .content { order: 1; }
+    }
+
+    /* Sidebar */
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .progress-widget {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .progress-widget h3 {
+        margin: 0 0 16px 0;
+        font-size: 14px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        letter-spacing: 0.5px;
+    }
+
+    .progress-bar-container {
+        width: 100%;
+        height: 6px;
+        background: var(--border-color);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 12px;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #0d6efd 0%, #0dcaf0 100%);
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+
+    .progress-text {
+        font-size: 13px;
+        color: var(--text-muted);
+        text-align: center;
+    }
+
+    .topics-panel {
+        background: white;
+        border-radius: 12px;
+        padding: 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+
+    .topics-header {
+        padding: 16px;
+        background: var(--light-color);
+        border-bottom: 1px solid var(--border-color);
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--text-color);
+    }
+
+    .topics-list {
+        max-height: calc(100vh - 400px);
+        overflow-y: auto;
+    }
+
+    .topic-item {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border-color);
+        transition: background 0.2s ease;
+        cursor: pointer;
+    }
+
+    .topic-item:last-child {
+        border-bottom: none;
+    }
+
+    .topic-item:hover:not(.locked) {
+        background: #f0f7ff;
+    }
+
+    .topic-item.locked {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .topic-checkbox {
+        margin-right: 10px;
+        cursor: pointer;
+        width: 18px;
+        height: 18px;
+    }
+
+    .topic-item.locked .topic-checkbox {
+        cursor: not-allowed;
+    }
+
+    .topic-content {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .topic-text {
+        flex: 1;
+    }
+
+    .topic-name {
+        font-weight: 500;
+        font-size: 14px;
+        color: var(--text-color);
+        margin-bottom: 4px;
+    }
+
+    .topic-desc {
+        font-size: 12px;
+        color: var(--text-muted);
+        line-height: 1.4;
+    }
+
+    .topic-icon {
+        font-size: 14px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+    }
+
+    .final-quiz-btn {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border: none;
+        padding: 12px 16px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        width: 100%;
+        transition: all 0.2s ease;
+        margin-top: 8px;
+    }
+
+    .final-quiz-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    }
+
+    .final-quiz-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Content Area */
+    .content {
+        background: white;
+        border-radius: 12px;
+        padding: 32px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .content-header {
+        margin-bottom: 28px;
+    }
+
+    .content-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        margin: 0 0 8px 0;
+        color: var(--text-color);
+    }
+
+    .content-header p {
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 15px;
+    }
+
+    .alert {
+        padding: 14px 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+
+    .alert-info {
+        background: #cfe2ff;
+        color: #084298;
+        border: 1px solid #b6d4fe;
+    }
+
+    .alert-success {
+        background: #d1e7dd;
+        color: #0a3622;
+        border: 1px solid #badbcc;
+    }
+
+    .alert-secondary {
+        background: #e2e3e5;
+        color: #383d41;
+        border: 1px solid #d3d3d7;
+    }
+
+    .content-placeholder {
+        margin-top: 20px;
+        padding: 20px;
+        background: var(--light-color);
+        border: 1px dashed var(--border-color);
+        border-radius: 8px;
+        text-align: center;
+        color: var(--text-muted);
+    }
+
+    .content-placeholder h5 {
+        margin: 0 0 8px 0;
+        font-size: 14px;
+        color: var(--text-color);
+    }
+
+    .content-placeholder p {
+        margin: 0;
+        font-size: 13px;
+    }
+
+    .loading-spinner {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 300px;
+        gap: 12px;
+        color: var(--text-muted);
+    }
+
+    .spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--border-color);
+        border-top-color: var(--primary-color);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .completion-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        text-align: center;
+        margin: 20px 0;
+    }
+
+    .completion-badge h4 {
+        margin: 0 0 4px 0;
+        font-size: 18px;
+    }
+
+    .completion-badge p {
+        margin: 0;
+        font-size: 13px;
+        opacity: 0.95;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row" style="gap: 0;">
+    <div class="col-12">
+        <div style="margin-bottom: 20px;">
+            <h1 style="margin: 0 0 4px 0; font-size: 28px;">{{ course.title }}</h1>
+            <p style="margin: 0; color: var(--text-muted);">{{ course.category or 'General' }} • {{ course.level or 'All' }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="learn-wrapper">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <!-- Progress Widget -->
+        <div class="progress-widget">
+            <h3>📊 Your Progress</h3>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">0 / 0 topics</div>
+        </div>
+
+        <!-- Topics Panel -->
+        <div class="topics-panel">
+            <div class="topics-header">📚 Topics</div>
+            <div class="topics-list" id="topicsList">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <span>Loading topics...</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+        <div id="contentLoading" class="loading-spinner">
+            <div class="spinner"></div>
+            <span>Loading...</span>
+        </div>
+
+        <div id="contentArea" style="display: none;">
+            <div class="content-header">
+                <h1 id="topicTitle"></h1>
+                <p id="topicDesc"></p>
+            </div>
+
+            <div id="alertBox"></div>
+
+            <div class="content-placeholder">
+                <h5>📖 Topic Content</h5>
+                <p>Course materials for this topic will appear here.</p>
+            </div>
+        </div>
+    </main>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/progress.js') }}"></script>
+<script>
+    const courseId = {{ course.course_id }};
+    const userId = {{ current_user.user_id }};
+    
+    let topics = {{ topics | tojson }};
+    let enrollment = null;
+    let currentTopic = null;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', async () => {
+        topics = topics.sort((a, b) => (a.sequence_order || 0) - (b.sequence_order || 0));
+        await loadEnrollment();
+        renderTopics();
+        displayCurrentTopic();
+    });
+
+    // Load enrollment
+    async function loadEnrollment() {
+        try {
+            enrollment = await window.ProgressAPI.getEnrollment(courseId);
+            currentTopic = enrollment.current_topic || null;
+        } catch (err) {
+            console.error('Failed to load enrollment:', err);
+        }
+    }
+
+    // Render topics list
+    function renderTopics() {
+        const container = document.getElementById('topicsList');
+        container.innerHTML = '';
+
+        topics.forEach((topic, idx) => {
+            const isCompleted = currentTopic !== null && currentTopic >= topic.topic_id;
+            const isNext = (currentTopic === null && idx === 0) || (currentTopic !== null && currentTopic === topic.topic_id - 1);
+            const isLocked = currentTopic === null ? idx > 0 : currentTopic < topic.topic_id;
+            const isFinal = topic.name === 'Final Assessment';
+
+            const item = document.createElement('div');
+            item.className = `topic-item ${isLocked ? 'locked' : ''}`;
+
+            if (isFinal) {
+                item.innerHTML = `
+                    <div class="topic-content">
+                        <div class="topic-text">
+                            <div class="topic-name">📋 ${topic.name}</div>
+                            ${topic.description ? `<div class="topic-desc">${topic.description}</div>` : ''}
+                        </div>
+                        <div class="topic-icon">${isCompleted ? '✓' : ''}</div>
+                    </div>
+                    <button class="final-quiz-btn" onclick="goToQuiz(${courseId})" ${isLocked ? 'disabled' : ''}>
+                        Start Final Quiz
+                    </button>
+                `;
+            } else {
+                item.innerHTML = `
+                    <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; width: 100%;">
+                        <input type="checkbox" class="topic-checkbox" data-id="${topic.topic_id}" 
+                               ${isCompleted ? 'checked disabled' : (isNext ? '' : 'disabled')}
+                               onchange="handleCheck(this)">
+                        <div class="topic-text" style="flex: 1;">
+                            <div class="topic-name">${topic.name}</div>
+                            ${topic.description ? `<div class="topic-desc">${topic.description}</div>` : ''}
+                        </div>
+                        <div class="topic-icon">${isCompleted ? '✓' : isNext ? '▶' : '○'}</div>
+                    </label>
+                `;
+            }
+
+            container.appendChild(item);
+        });
+
+        updateProgressBar();
+    }
+
+    // Handle checkbox
+    async function handleCheck(checkbox) {
+        const topicId = parseInt(checkbox.getAttribute('data-id'));
+        
+        if (!checkbox.checked) {
+            checkbox.checked = true;
+            return;
+        }
+
+        try {
+            await window.ProgressAPI.updateProgress(courseId, topicId);
+            await loadEnrollment();
+            renderTopics();
+            displayCurrentTopic();
+        } catch (err) {
+            console.error('Failed to save progress:', err);
+            checkbox.checked = false;
+            alert('Failed to save progress. Please try again.');
+        }
+    }
+
+    // Update progress bar
+    function updateProgressBar() {
+        const regularTopics = topics.filter(t => t.name !== 'Final Assessment');
+        const total = regularTopics.length;
+        const completed = currentTopic ? 
+            regularTopics.filter(t => t.topic_id <= currentTopic).length : 0;
+
+        const percent = total > 0 ? (completed / total) * 100 : 0;
+        document.getElementById('progressFill').style.width = percent + '%';
+        document.getElementById('progressText').textContent = `${completed} / ${total} topics`;
+    }
+
+    // Display current topic
+    function displayCurrentTopic() {
+        const contentLoading = document.getElementById('contentLoading');
+        const contentArea = document.getElementById('contentArea');
+        const alertBox = document.getElementById('alertBox');
+
+        if (topics.length === 0) {
+            contentLoading.style.display = 'none';
+            contentArea.style.display = 'none';
+            return;
+        }
+
+        // Find uncompleted topic or Final Assessment
+        let topic = topics.find(t => {
+            const isComp = currentTopic !== null && currentTopic >= t.topic_id;
+            return !isComp;
+        }) || topics.find(t => t.name === 'Final Assessment') || topics[0];
+
+        const isComp = currentTopic !== null && currentTopic >= topic.topic_id;
+        const isNext = (currentTopic === null && topics[0].topic_id === topic.topic_id) || 
+                       (currentTopic !== null && currentTopic === topic.topic_id - 1);
+        const isFinal = topic.name === 'Final Assessment';
+
+        // Update UI
+        contentLoading.style.display = 'none';
+        contentArea.style.display = 'block';
+
+        document.getElementById('topicTitle').textContent = topic.name;
+        document.getElementById('topicDesc').textContent = topic.description || 'No description available';
+
+        let alertHtml = '';
+        if (isFinal) {
+            alertHtml = `
+                <div class="completion-badge">
+                    <h4>🎯 Ready for Final Assessment?</h4>
+                    <p>You've completed all topics. Take the final quiz now!</p>
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-success" onclick="goToQuiz(${courseId})" style="padding: 12px 30px; font-weight: 600;">
+                        Begin Final Quiz
+                    </button>
+                </div>
+            `;
+        } else if (isComp) {
+            alertHtml = '<div class="alert alert-success">✅ You\'ve completed this topic.</div>';
+        } else if (isNext) {
+            alertHtml = '<div class="alert alert-info">📖 Study this topic, then check the box on the left to mark it complete.</div>';
+        } else {
+            alertHtml = '<div class="alert alert-secondary">🔒 This topic is locked. Complete previous topics first.</div>';
+        }
+
+        alertBox.innerHTML = alertHtml;
+    }
+
+    // Go to quiz
+    function goToQuiz(courseId) {
+        window.location.href = `/course/${courseId}/assessment`;
+    }
+</script>
+{% endblock %}

@@ -65,8 +65,6 @@
                         <option value="">Select your role</option>
                         <option value="Student">Student</option>
                         <option value="Instructor">Instructor</option>
-                        <option value="Administrator">Administrator</option>
-                        <option value="DataAnalyst">Data Analyst</option>
                     </select>
                 </div>
             </div>
@@ -192,48 +190,7 @@
                 </div>
             </div>
 
-            <div id="adminFields" class="role-specific-fields" style="display: none;">
-                <div class="form-section-title">
-                    <h3>Administrator Information</h3>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="admin_level">Admin Level</label>
-                        <select id="admin_level" name="admin_level" class="form-control">
-                            <option value="">Select admin level</option>
-                            <option value="Junior">Junior</option>
-                            <option value="Senior">Senior</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="assigned_since">Assigned Since</label>
-                        <input 
-                            type="date" 
-                            id="assigned_since" 
-                            name="assigned_since"
-                            class="form-control"
-                        >
-                    </div>
-                </div>
-            </div>
-
-            <div id="analystFields" class="role-specific-fields" style="display: none;">
-                <div class="form-section-title">
-                    <h3>Data Analyst Information</h3>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="analyst_qualification">Qualification</label>
-                        <input 
-                            type="text" 
-                            id="analyst_qualification" 
-                            name="analyst_qualification"
-                            placeholder="e.g., Statistics, Data Science"
-                            class="form-control"
-                        >
-                    </div>
-                </div>
-            </div>
+            <!-- Admin/Data Analyst registration removed: only Student and Instructor may self-register -->
 
             <button type="submit" class="btn btn-primary btn-block">
                 <span class="btn-text">Create Account</span>
@@ -259,8 +216,7 @@
     // Logic for dynamic Role Hints
     const roleHints = {
         'Student': 'Gain access to premium courses, track your progress, and earn certificates.',
-        'Instructor': 'Create courses, manage students, and share your knowledge with the world.',
-        'Administrator': 'Manage platform settings, monitor user activity, and maintain system integrity.'
+        'Instructor': 'Create courses, manage students, and share your knowledge with the world.'
     };
 
     document.getElementById('role').addEventListener('change', function() {
@@ -268,31 +224,27 @@
         const hintText = document.getElementById('roleHintText');
         const val = this.value;
 
-        if (roleHints[val]) {
-            hintText.textContent = roleHints[val];
-            hintBox.style.display = 'block';
-        } else {
-            hintBox.style.display = 'none';
+        if (hintBox && hintText) {
+            if (roleHints[val]) {
+                hintText.textContent = roleHints[val];
+                hintBox.style.display = 'block';
+            } else {
+                hintBox.style.display = 'none';
+            }
         }
     });
     
-// Show/hide role-specific fields
+// Show/hide role-specific fields (only student/instructor available)
 document.getElementById('role').addEventListener('change', function() {
     const role = this.value;
     
     document.getElementById('studentFields').style.display = 'none';
     document.getElementById('instructorFields').style.display = 'none';
-    document.getElementById('adminFields').style.display = 'none';
-    document.getElementById('analystFields').style.display = 'none';
     
     if (role === 'Student') {
         document.getElementById('studentFields').style.display = 'block';
     } else if (role === 'Instructor') {
         document.getElementById('instructorFields').style.display = 'block';
-    } else if (role === 'Administrator') {
-        document.getElementById('adminFields').style.display = 'block';
-    } else if (role === 'DataAnalyst') {
-        document.getElementById('analystFields').style.display = 'block';
     }
 });
 

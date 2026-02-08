@@ -34,6 +34,17 @@ def register_user(db: Session, payload: RegisterRequest):
         )
 
     # --------------------------------------------------------
+    # RESTRICT WEB REGISTRATION ROLES
+    # Only students and instructors may self-register via the web
+    # --------------------------------------------------------
+    allowed_roles = ("student", "instructor")
+    if payload.role is None or payload.role.lower() not in allowed_roles:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Registration for this role is restricted. Please contact a system administrator."
+        )
+
+    # --------------------------------------------------------
     # STORE PASSWORD (PLAIN TEXT - NO HASHING)
     # --------------------------------------------------------
 
@@ -43,12 +54,16 @@ def register_user(db: Session, payload: RegisterRequest):
     # CREATE BASE USER
     # --------------------------------------------------------
 
+    # Normalize stored role to a consistent display value
+    role_lower = payload.role.lower()
+    role_display = "Student" if role_lower == "student" else "Instructor"
+
     user_data = {
         "name": payload.name,
         "email": payload.email,
         "password": stored_pw,
         "phone_number": payload.phone_number,
-        "role": payload.role
+        "role": role_display
     }
 
     user = user_repo.create_user(db, user_data)
@@ -156,7 +171,7 @@ def login_user(db: Session, email: str, password: str):
     # ADMIN LEVEL PATCH
     # --------------------------------------------------------
 
-    if user.role == "Administrator":
+    if (user.role or '').lower() == "administrator":
 
         admin_record = db.query(Administrator).filter(
             Administrator.user_id == user.user_id
@@ -184,7 +199,7 @@ def login_user(db: Session, email: str, password: str):
     }
 
     # Include admin_level if user is administrator
-    if user.role == "Administrator":
+    if (user.role or '').lower() == "administrator":
         response_data["admin_level"] = token_data.get("admin_level")
 
     return response_data

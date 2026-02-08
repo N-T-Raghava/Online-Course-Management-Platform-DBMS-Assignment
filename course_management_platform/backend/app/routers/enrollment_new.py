@@ -30,8 +30,11 @@ router = APIRouter(
     tags=["Participation - Enrollment"]
 )
 
+# ------------------------------------------------------------
 # ENROLL STUDENT
-@router.post("/")
+# • Student → Self only
+# • Admin → Override allowed
+# ------------------------------------------------------------ @router.post("/")
 def enroll_student(
     payload: EnrollmentCreate,
     db: Session = Depends(get_db),
@@ -44,8 +47,12 @@ def enroll_student(
         current_user
     )
 
+
+# ------------------------------------------------------------ 
 # UPDATE COMPLETION
-@router.put("/complete/{student_user_id}/{course_id}")
+# • Student → Self only
+# • Admin → Override allowed
+# ------------------------------------------------------------ @router.put("/complete/{student_user_id}/{course_id}")
 def update_completion(
     student_user_id: int,
     course_id: int,
@@ -62,8 +69,12 @@ def update_completion(
         current_user
     )
 
+
+# ------------------------------------------------------------ 
 # RATE COURSE
-@router.post("/rate/{student_user_id}/{course_id}")
+# • Student → Self only
+# • Admin → Override allowed
+# ------------------------------------------------------------ @router.post("/rate/{student_user_id}/{course_id}")
 def rate_course(
     student_user_id: int,
     course_id: int,
@@ -77,20 +88,28 @@ def rate_course(
         course_id,
         payload.rating,
         payload.review_text,
-        payload.is_public,
         current_user
     )
 
+
+# ------------------------------------------------------------ 
 # GET PUBLIC REVIEWS FOR A COURSE
-@router.get("/reviews/{course_id}", response_model=list[PublicReviewResponse])
+# • Open endpoint (no auth required)
+# • Returns only reviews marked as public
+# • Displays student name, rating, and review text
+# ------------------------------------------------------------ @router.get("/reviews/{course_id}", response_model=list[PublicReviewResponse])
 def get_public_reviews(
     course_id: int,
     db: Session = Depends(get_db)
 ):
     return get_public_reviews_by_course_service(db, course_id)
 
+
+# ------------------------------------------------------------ 
 # GET STUDENT ENROLLMENTS
-@router.get("/student/{student_user_id}", response_model=list[StudentEnrollmentResponse])
+# • Protected endpoint (requires auth)
+# • Returns all enrollments for the student with course details
+# ------------------------------------------------------------ @router.get("/student/{student_user_id}", response_model=list[StudentEnrollmentResponse])
 def get_student_enrollments(
     student_user_id: int,
     db: Session = Depends(get_db),
@@ -98,8 +117,14 @@ def get_student_enrollments(
 ):
     return get_student_enrollments_service(db, student_user_id)
 
+
+# ------------------------------------------------------------ 
 # UPDATE TOPIC PROGRESS
-@router.put("/progress/{student_user_id}/{course_id}/{topic_id}")
+# • Student → Self only
+# • Admin → Override allowed
+# • Stores last completed topic_id
+# • Auto-saves progression
+# ------------------------------------------------------------ @router.put("/progress/{student_user_id}/{course_id}/{topic_id}")
 def update_topic_progress(
     student_user_id: int,
     course_id: int,
@@ -115,10 +140,16 @@ def update_topic_progress(
         current_user
     )
 
+
+# ------------------------------------------------------------ 
 # SUBMIT ASSESSMENT
-# Accepts either precomputed score (0-100%) OR answers array
-# If answers provided: server validates against course.quiz_answer_key
-@router.post("/assessment/{student_user_id}/{course_id}")
+# • Student → Self only
+# • Admin → Override allowed
+# • Accepts either precomputed score (0-100%) OR answers array
+# • If answers provided: server validates against course.quiz_answer_key
+# • Maps score to grade and auto-completes if passing
+# • Returns score, grade, and completion status
+# ------------------------------------------------------------ @router.post("/assessment/{student_user_id}/{course_id}")
 def submit_assessment(
     student_user_id: int,
     course_id: int,

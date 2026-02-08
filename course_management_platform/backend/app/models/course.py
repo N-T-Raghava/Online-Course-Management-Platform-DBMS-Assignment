@@ -15,6 +15,7 @@ class Course(Base):
     language = Column(String(50))
     start_date = Column(Date)
     duration = Column(Integer)
+    quiz_answer_key = Column(String(15), nullable=True)  # Format: "ABCDACBDABCDABC" for 15 questions
 
     university_id = Column(Integer, ForeignKey("university.university_id"))
 

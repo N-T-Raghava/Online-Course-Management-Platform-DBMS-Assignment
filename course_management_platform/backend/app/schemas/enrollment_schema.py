@@ -27,6 +27,7 @@ class ProgressUpdate(BaseModel):
 class RatingUpdate(BaseModel):
     rating: int = Field(..., ge=1, le=5)
     review_text: Optional[str]
+    is_public: Optional[bool] = False
 
 
 # Public Review Response (displayed on course detail page)

@@ -168,7 +168,7 @@
                         <p><strong>Status:</strong> {{ enrollment.completion_status }}</p>
                         {% endif %}
                         
-                        {% if enrollment.grade %}
+                        {% if enrollment.grade and enrollment.completion_status and enrollment.completion_status == 'Completed' %}
                         <p><strong>Grade:</strong> {{ enrollment.grade }}</p>
                         {% endif %}
 
@@ -176,7 +176,10 @@
                         <p><strong>Your Rating:</strong> {{ enrollment.rating }}/5 ⭐</p>
                         {% endif %}
 
-                        <a href="{{ url_for('course_detail', course_id=enrollment.course_id) }}" class="btn btn-primary btn-small">View Details</a>
+                        <div style="display: flex; gap: 8px; margin-top: 12px;">
+                            <a href="/course/{{ enrollment.course_id }}/learn" class="btn btn-success btn-small" style="flex: 1; text-align: center;">📚 Learn</a>
+                            <a href="{{ url_for('course_detail', course_id=enrollment.course_id) }}" class="btn btn-primary btn-small" style="flex: 1; text-align: center;">Details</a>
+                        </div>
                     </div>
                 </div>
             </div>

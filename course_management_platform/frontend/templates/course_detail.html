@@ -79,9 +79,13 @@
                 {% endif %}
                 
                 <hr>
-                <form method="post" action="/enroll/{{ course.course_id }}">
-                    <button type="submit" class="btn btn-success btn-block">Enroll Now</button>
-                </form>
+                {% if is_enrolled %}
+                    <a href="/course/{{ course.course_id }}/learn" class="btn btn-primary btn-block" style="width: 100%; padding: 10px; text-align: center; text-decoration: none; display: block; margin-bottom: 10px;">📚 Start Learning</a>
+                {% else %}
+                    <form method="post" action="/enroll/{{ course.course_id }}">
+                        <button type="submit" class="btn btn-success btn-block" style="width: 100%;">Enroll Now</button>
+                    </form>
+                {% endif %}
             </div>
         </div>
     </div>

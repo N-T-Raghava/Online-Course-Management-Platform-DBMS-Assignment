@@ -103,6 +103,7 @@ def rate_course_service(
     course_id: int,
     rating: int,
     review_text: str | None,
+    is_public: bool | None,
     current_user: dict
 ):
 
@@ -130,7 +131,8 @@ def rate_course_service(
         db,
         enrollment,
         rating,
-        review_text
+        review_text,
+        is_public
     )
 
 
@@ -316,13 +318,16 @@ def submit_assessment_service(
     db: Session,
     student_user_id: int,
     course_id: int,
-    score: int,
+    score: int | None,
+    answers: list[str] | None,
     current_user: dict
 ):
     """
     Submit assessment and calculate grade.
     • Validates student is accessing their own data
-    • Maps score to grade (90-100:A, 75-89:B, 60-74:C, 50-59:D, <50:F)
+    • Accepts either a precomputed percentage score or raw answers array
+    • If answers provided: computes score using course.quiz_answer_key stored on Course
+    • Maps score to grade (based on 15-question scale)
     • Updates enrollment.grade
     • Auto-completes course if grade != F
     • Returns score, grade, and completion status
@@ -355,8 +360,37 @@ def submit_assessment_service(
     if not enrollment:
         raise HTTPException(status_code=404, detail="Enrollment not found")
 
+    # If answers provided, compute percent score using course.quiz_answer_key
+    final_score = None
+    if answers is not None:
+        if not course.quiz_answer_key:
+            raise HTTPException(status_code=400, detail="No answer key configured for this course")
+        key = course.quiz_answer_key.strip()
+        if len(key) == 0:
+            raise HTTPException(status_code=400, detail="Answer key is empty")
+
+        # Normalize key and compare
+        key = key.upper()
+        total = len(key)
+        if len(answers) != total:
+            raise HTTPException(status_code=400, detail=f"Answers length {len(answers)} does not match expected {total}")
+
+        correct = 0
+        for i, ans in enumerate(answers):
+            if ans is None:
+                continue
+            if ans.upper() == key[i]:
+                correct += 1
+
+        # Convert to percentage (0-100)
+        final_score = round((correct / total) * 100)
+    elif score is not None:
+        final_score = int(score)
+    else:
+        raise HTTPException(status_code=400, detail="Either 'score' or 'answers' must be provided")
+
     # Map score to grade
-    grade = _map_score_to_grade(score)
+    grade = _map_score_to_grade(final_score)
 
     # Update grade
     participation_repo.update_grade(db, enrollment, grade)
@@ -372,7 +406,7 @@ def submit_assessment_service(
 
     # Return result
     return {
-        "score": score,
+        "score": final_score,
         "grade": grade,
         "completion_status": "Completed" if grade != "F" else "Ongoing",
         "message": "Course completed successfully!" if grade != "F" else "Please attempt again to pass the course"
@@ -382,19 +416,20 @@ def submit_assessment_service(
 def _map_score_to_grade(score: int) -> str:
     """
     Map score to grade.
-    90 – 100 → A
-    75 – 89 → B
-    60 – 74 → C
-    50 – 59 → D
-    Below 50 → F
+    For 15-question quiz (converted to percentage):
+    13–15 (86.67–100%) → A
+    10–12 (66.67–86.66%) → B
+    7–9 (46.67–66.66%) → C
+    4–6 (26.67–46.66%) → D
+    0–3 (0–26.66%) → F
     """
-    if score >= 90:
+    if score >= 87:  # 13/15 = 86.67%
         return "A"
-    elif score >= 75:
+    elif score >= 67:  # 10/15 = 66.67%
         return "B"
-    elif score >= 60:
+    elif score >= 47:  # 7/15 = 46.67%
         return "C"
-    elif score >= 50:
+    elif score >= 27:  # 4/15 = 26.67%
         return "D"
     else:
         return "F"

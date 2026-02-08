@@ -174,8 +174,17 @@ def course_detail(course_id: int):
     if not success or not course:
         return render_template('404.html'), 404
 
+    # Check if user is enrolled
+    is_enrolled = False
+    if 'token' in session and 'user_id' in session:
+        token = session.get('token')
+        user_id = session.get('user_id')
+        enrolled_success, enrollments = ProgressService.get_enrollment(user_id, course_id, token)
+        if enrolled_success and enrollments:
+            is_enrolled = True
+
     # content/topics/university/reviews may be empty or None
-    return render_template('course_detail.html', course=course, content=content if content_success else [], university=university if uni_success else None, topics=topics if topics_success else [], reviews=reviews if reviews_success else [])
+    return render_template('course_detail.html', course=course, content=content if content_success else [], university=university if uni_success else None, topics=topics if topics_success else [], reviews=reviews if reviews_success else [], is_enrolled=is_enrolled)
 
 
 @app.route('/enroll/<int:course_id>', methods=['POST'])
@@ -223,11 +232,14 @@ def course_learn(course_id: int):
     if not success or not course:
         return render_template('404.html'), 404
     
+    # Fetch course topics (same as course_detail)
+    topics_success, topics = CourseService.get_topics_by_course(course_id)
+    
     user_context = {
         'user_id': user_id
     }
     
-    return render_template('course_learn.html', course=course, current_user=user_context, auth_token=token)
+    return render_template('course_learn.html', course=course, topics=topics if topics_success else [], current_user=user_context, auth_token=token)
 
 
 @app.route('/course/<int:course_id>/assessment')
@@ -283,19 +295,28 @@ def api_rate_course(course_id: int):
     token = session.get('token')
     user_id = session.get('user_id')
 
-    data = request.get_json() or {}
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No JSON data provided'}), 400
+    
     rating = data.get('rating')
     review_text = data.get('review_text', '')
+    is_public = data.get('is_public', False)
 
     if rating is None or not (1 <= int(rating) <= 5):
         return jsonify({'error': 'Invalid rating. Must be 1-5.'}), 400
 
-    success, result = ProgressService.rate_course(user_id, course_id, int(rating), review_text, token)
+    success, result = ProgressService.rate_course(user_id, course_id, int(rating), review_text, is_public=is_public, token=token)
 
     if success:
         return jsonify(result), 200
     else:
-        return jsonify({'error': result or 'Failed to submit review'}), 400
+        # Normalize backend error payloads into a string message
+        if isinstance(result, dict):
+            msg = result.get('detail') or result.get('error') or str(result)
+        else:
+            msg = str(result)
+        return jsonify({'error': msg}), 400
 
 
 # ============================================================
@@ -370,25 +391,36 @@ def api_update_progress(course_id: int, topic_id: int):
 
 @app.route('/api/progress/submit/<int:course_id>', methods=['POST'])
 def api_submit_assessment(course_id: int):
-    """Submit assessment score"""
+    """Submit assessment with either score or answers array"""
     if 'token' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
     
     token = session.get('token')
     user_id = session.get('user_id')
     
-    data = request.get_json()
+    data = request.get_json() or {}
     score = data.get('score')
+    answers = data.get('answers')
     
-    if score is None or not (0 <= score <= 100):
-        return jsonify({'error': 'Invalid score. Must be between 0 and 100.'}), 400
+    if score is None and answers is None:
+        return jsonify({'error': 'Either score or answers must be provided'}), 400
     
-    success, result = ProgressService.submit_assessment(user_id, course_id, score, token)
+    if score is not None:
+        score = int(score)
+        if not (0 <= score <= 100):
+            return jsonify({'error': 'Invalid score. Must be between 0 and 100.'}), 400
+    
+    success, result = ProgressService.submit_assessment(user_id, course_id, score=score, answers=answers, token=token)
     
     if success:
         return jsonify(result), 200
     else:
-        return jsonify({'error': result or 'Failed to submit assessment'}), 400
+        # Normalize backend error payloads into a string message
+        if isinstance(result, dict):
+            msg = result.get('detail') or result.get('error') or str(result)
+        else:
+            msg = str(result)
+        return jsonify({'error': msg}), 400
 
 
 # ============================================================
@@ -656,15 +688,15 @@ def logout():
 
 def check_admin_role():
     """Middleware to check if user is admin"""
-    if 'token' not in session or session.get('role') != 'Administrator':
+    if 'token' not in session:
         return False
-    return True
+    return session.get('role', '').lower() == 'administrator'
 
 def check_senior_admin():
     """Middleware to check if user is Senior Admin"""
     if not check_admin_role():
         return False
-    admin_level = session.get('admin_level', '').lower()
+    admin_level = (session.get('admin_level') or '').lower()
     return admin_level == 'senior'
 
 @app.route('/admin/dashboard')

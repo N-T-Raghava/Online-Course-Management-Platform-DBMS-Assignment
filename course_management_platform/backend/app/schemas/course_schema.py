@@ -30,6 +30,7 @@ class CourseCreate(BaseModel):
     start_date: Optional[date]
     duration: Optional[int]
     university_id: Optional[int]
+    quiz_answer_key: Optional[str] = Field(None, max_length=15)  # Format: "ABCDACBDABCDABC"
 
 
 class CourseResponse(BaseModel):
@@ -40,6 +41,7 @@ class CourseResponse(BaseModel):
     level: Optional[str]
     language: Optional[str]
     duration: Optional[int]
+    quiz_answer_key: Optional[str]
 
     class Config:
         orm_mode = True

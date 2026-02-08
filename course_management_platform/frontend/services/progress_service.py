@@ -109,12 +109,17 @@ class ProgressService:
     def submit_assessment(
         student_user_id: int,
         course_id: int,
-        score: int,
+        score: int = None,
+        answers: list = None,
         token: str = None
     ) -> Tuple[bool, Any]:
         """
-        Submit assessment and get grade + completion status.
-        Payload: {"score": int (0-100)}
+        Submit assessment with either precomputed score or answers array.
+        Accepts either:
+        - score: int (0-100 percentage)
+        - answers: list of str (e.g., ['A', 'B', 'C', ...])
+        
+        Backend will compute score from answers if provided, or use precomputed score.
         Returns: (success: bool, result: dict with score, grade, completion_status)
         """
         try:
@@ -122,7 +127,14 @@ class ProgressService:
             if token:
                 headers['Authorization'] = f'Bearer {token}'
             
-            payload = {"score": score}
+            payload = {}
+            if score is not None:
+                payload["score"] = score
+            if answers is not None:
+                payload["answers"] = answers
+            
+            if not payload:
+                return False, "Either score or answers must be provided"
             
             resp = requests.post(
                 f"{BACKEND_URL}/enrollments/assessment/{student_user_id}/{course_id}",
@@ -175,6 +187,7 @@ class ProgressService:
         course_id: int,
         rating: int,
         review_text: str = '',
+        is_public: bool = False,
         token: str = None
     ) -> Tuple[bool, Any]:
         """
@@ -187,7 +200,7 @@ class ProgressService:
             if token:
                 headers['Authorization'] = f'Bearer {token}'
 
-            payload = {"rating": rating, "review_text": review_text}
+            payload = {"rating": rating, "review_text": review_text, "is_public": bool(is_public)}
 
             resp = requests.post(
                 f"{BACKEND_URL}/enrollments/rate/{student_user_id}/{course_id}",
@@ -205,20 +218,21 @@ class ProgressService:
 # Utility function for grade mapping (can be used on frontend)
 def map_score_to_grade(score: int) -> str:
     """
-    Map score (0-100) to grade.
-    90 – 100 → A
-    75 – 89 → B
-    60 – 74 → C
-    50 – 59 → D
-    Below 50 → F
+    Map score (0-100 percentage) to grade.
+    For 15-question quiz (converted to percentage):
+    13–15 (86.67–100%) → A
+    10–12 (66.67–86.66%) → B
+    7–9 (46.67–66.66%) → C
+    4–6 (26.67–46.66%) → D
+    0–3 (0–26.66%) → F
     """
-    if score >= 90:
+    if score >= 87:  # 13/15 = 86.67%
         return "A"
-    elif score >= 75:
+    elif score >= 67:  # 10/15 = 66.67%
         return "B"
-    elif score >= 60:
+    elif score >= 47:  # 7/15 = 46.67%
         return "C"
-    elif score >= 50:
+    elif score >= 27:  # 4/15 = 26.67%
         return "D"
     else:
         return "F"
