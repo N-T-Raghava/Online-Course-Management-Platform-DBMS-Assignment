@@ -5,11 +5,11 @@ from app.models.admin_audit import AdminAudit
 
 def log_admin_action(
     db: Session,
-    admin_user_id: int,
-    admin_level: str,
-    action: str,
-    method: str,
-    status_code: int
+    admin_user_id: int = None,
+    admin_level: str = None,
+    action: str = None,
+    method: str = None,
+    status_code: int = None
 ):
 
     record = AdminAudit(

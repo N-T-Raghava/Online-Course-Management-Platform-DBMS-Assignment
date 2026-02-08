@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.teaching_schema import TeachingAssign
 from app.services.participation_service import (
-    assign_instructor_service
+    assign_instructor_service,
+    get_instructor_courses_service
 )
 from app.repositories.participation_repo import (
     get_instructors_by_course
@@ -49,4 +50,18 @@ def get_instructors(
     return get_instructors_by_course(
         db,
         course_id
+    )
+
+
+# ------------------------------------------------------------
+# Get Courses By Instructor → OPEN
+# ------------------------------------------------------------
+@router.get("/instructor/{instructor_user_id}")
+def get_instructor_courses(
+    instructor_user_id: int,
+    db: Session = Depends(get_db)
+):
+    return get_instructor_courses_service(
+        db,
+        instructor_user_id
     )

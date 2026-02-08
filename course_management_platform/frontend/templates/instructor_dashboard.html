@@ -1,0 +1,501 @@
+{% extends "base.html" %}
+
+{% block title %}Instructor Dashboard - Course Management Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .instructor-welcome-banner {
+        background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+        color: white;
+        padding: 40px 20px;
+        border-radius: 8px;
+        margin-bottom: 40px;
+        box-shadow: var(--shadow);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .instructor-welcome-banner::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+    }
+
+    .instructor-welcome-banner > div {
+        position: relative;
+        z-index: 1;
+    }
+
+    .instructor-welcome-banner h1 {
+        font-size: 32px;
+        margin: 0 0 8px 0;
+        font-weight: 700;
+    }
+
+    .instructor-welcome-banner .info-line {
+        font-size: 14px;
+        opacity: 0.95;
+        margin: 4px 0;
+    }
+
+    .stat-card-instructor {
+        background: white;
+        padding: 24px;
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+        text-align: center;
+        transition: var(--transition);
+        border-left: 4px solid #8B5CF6;
+    }
+
+    .stat-card-instructor:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 20px rgba(139, 92, 246, 0.15);
+    }
+
+    .stat-card-instructor h6 {
+        color: var(--text-muted);
+        font-size: 12px;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    .stat-card-instructor h2 {
+        color: #8B5CF6;
+        margin: 0;
+        font-size: 36px;
+        font-weight: 700;
+    }
+
+    .stats-section-instructor {
+        margin-bottom: 40px;
+    }
+
+    .courses-teaching-section {
+        margin-bottom: 40px;
+    }
+
+    .courses-teaching-section h3 {
+        margin-bottom: 20px;
+        font-weight: 600;
+        color: var(--dark-color);
+    }
+
+    .course-card-instructor {
+        background: white;
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        transition: var(--transition);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .course-card-instructor:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 8px 25px rgba(139, 92, 246, 0.2);
+    }
+
+    .course-card-header {
+        background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+        color: white;
+        padding: 20px;
+    }
+
+    .course-card-header h5 {
+        margin: 0 0 8px 0;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .course-card-meta {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+    }
+
+    .course-badge {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .course-card-body {
+        padding: 20px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .course-card-description {
+        color: var(--text-muted);
+        font-size: 14px;
+        margin-bottom: 16px;
+        flex: 1;
+    }
+
+    .course-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .course-stat-item {
+        text-align: center;
+    }
+
+    .course-stat-item small {
+        color: var(--text-muted);
+        display: block;
+        margin-bottom: 4px;
+        font-size: 12px;
+        text-transform: uppercase;
+    }
+
+    .course-stat-item strong {
+        color: #8B5CF6;
+        font-size: 20px;
+        display: block;
+    }
+
+    .course-card-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .btn-instructor-action {
+        padding: 10px 12px;
+        border: none;
+        border-radius: 4px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        transition: var(--transition);
+        display: inline-block;
+    }
+
+    .btn-view-course {
+        background: #8B5CF6;
+        color: white;
+    }
+
+    .btn-view-course:hover {
+        background: #7C3AED;
+        transform: translateY(-2px);
+    }
+
+    .btn-upload-content {
+        background: #F59E0B;
+        color: white;
+    }
+
+    .btn-upload-content:hover {
+        background: #D97706;
+        transform: translateY(-2px);
+    }
+
+    .btn-view-analytics {
+        background: #10B981;
+        color: white;
+    }
+
+    .btn-view-analytics:hover {
+        background: #059669;
+        transform: translateY(-2px);
+    }
+
+    .charts-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+
+    .chart-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+    }
+
+    .chart-card h5 {
+        margin: 0 0 20px 0;
+        font-weight: 600;
+        color: var(--dark-color);
+    }
+
+    .empty-state-instructor {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-muted);
+    }
+
+    .empty-state-instructor h5 {
+        margin-bottom: 12px;
+        font-size: 18px;
+        color: var(--dark-color);
+    }
+
+    .empty-state-instructor p {
+        margin-bottom: 20px;
+    }
+
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+        margin-bottom: 30px;
+    }
+
+    .action-btn {
+        background: #8B5CF6;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: var(--transition);
+        text-align: center;
+        display: inline-block;
+    }
+
+    .action-btn:hover {
+        background: #7C3AED;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+    }
+
+    @media (max-width: 768px) {
+        .instructor-welcome-banner h1 {
+            font-size: 24px;
+        }
+
+        .course-card-actions {
+            grid-template-columns: 1fr;
+        }
+
+        .quick-actions {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Welcome Banner -->
+<div class="instructor-welcome-banner">
+    <div>
+        <h1>Welcome back, {{ user.name }}! 👋</h1>
+        <p class="info-line">Instructor ID: <strong>{{ user.user_id }}</strong></p>
+        <p class="info-line">Last updated: <span id="current-time">{{ current_time }}</span></p>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+{% if stats.total_courses_taught > 0 %}
+<div class="quick-actions">
+    <a href="#courses-section" class="action-btn">View All Courses</a>
+    <a href="{{ url_for('instructor_upload_content_base') }}" class="action-btn">Upload Content</a>
+</div>
+{% endif %}
+
+<!-- Statistics Section -->
+<div class="stats-section-instructor">
+    <h3>Your Teaching Statistics</h3>
+    <div class="row g-4">
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card-instructor">
+                <h6>Courses Teaching</h6>
+                <h2>{{ stats.total_courses_taught or 0 }}</h2>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card-instructor">
+                <h6>Total Students</h6>
+                <h2>{{ stats.total_students or 0 }}</h2>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card-instructor">
+                <h6>Active Enrollments</h6>
+                <h2 id="active-enrollments">{{ active_enrollments or 0 }}</h2>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card-instructor">
+                <h6>Completion Rate</h6>
+                <h2 id="completion-rate">{{ completion_rate or 0 }}%</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+{% if stats.total_courses_taught > 0 %}
+<div class="charts-section">
+    <div class="chart-card">
+        <h5>Students Per Course</h5>
+        <canvas id="studentsPerCourseChart" style="max-height: 250px;"></canvas>
+    </div>
+    <div class="chart-card">
+        <h5>Course Completion Status</h5>
+        <canvas id="completionStatusChart" style="max-height: 250px;"></canvas>
+    </div>
+</div>
+{% endif %}
+
+<!-- Courses Teaching Section -->
+<div class="courses-teaching-section" id="courses-section">
+    <h3>Courses You Are Teaching</h3>
+    
+    {% if instructor_courses and instructor_courses|length > 0 %}
+        <div class="row g-4">
+            {% for course in instructor_courses %}
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="course-card-instructor">
+                    <div class="course-card-header">
+                        <h5>{{ course.course_title }}</h5>
+                        <div class="course-meta">
+                            <span class="course-badge">{{ course.level }}</span>
+                            <span class="course-badge">{{ course.category }}</span>
+                        </div>
+                    </div>
+                    <div class="course-card-body">
+                        <p class="course-card-description">
+                            {{ course.description[:100] if course.description else 'No description' }}{% if course.description and course.description|length > 100 %}...{% endif %}
+                        </p>
+                        <div class="course-stats">
+                            <div class="course-stat-item">
+                                <small>Students</small>
+                                <strong>{{ course.enrollment_count or 0 }}</strong>
+                            </div>
+                            <div class="course-stat-item">
+                                <small>Completed</small>
+                                <strong>{{ course.completion_count or 0 }}</strong>
+                            </div>
+                        </div>
+                        <div class="course-card-actions">
+                            <a href="{{ url_for('instructor_course_detail', course_id=course.course_id) }}" class="btn-instructor-action btn-view-course">View Course</a>
+                            <a href="{{ url_for('instructor_course_analytics', course_id=course.course_id) }}" class="btn-instructor-action btn-view-analytics">Analytics</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state-instructor">
+            <h5>No Courses Assigned Yet</h5>
+            <p>You are not currently assigned to teach any courses.</p>
+            <p style="color: var(--text-muted); font-size: 14px;">Contact an administrator to get started.</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+    // Update current time
+    function updateTime() {
+        const now = new Date();
+        const timeStr = now.toLocaleString();
+        document.getElementById('current-time').textContent = timeStr;
+    }
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    // Sample data for charts (populated from Flask context)
+    const courseData = {{ course_stats_json | safe }};
+    const completionData = {{ completion_stats_json | safe }};
+
+    // Students Per Course Chart
+    {% if instructor_courses and instructor_courses|length > 0 %}
+    const studentsCtx = document.getElementById('studentsPerCourseChart');
+    if (studentsCtx) {
+        const courseLabels = courseData.labels || [];
+        const studentCounts = courseData.data || [];
+
+        new Chart(studentsCtx, {
+            type: 'bar',
+            data: {
+                labels: courseLabels,
+                datasets: [{
+                    label: 'Students Enrolled',
+                    data: studentCounts,
+                    backgroundColor: '#8B5CF6',
+                    borderColor: '#7C3AED',
+                    borderWidth: 2,
+                    borderRadius: 4,
+                    hoverBackgroundColor: '#7C3AED'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        });
+    }
+
+    // Course Completion Status Chart
+    const completionCtx = document.getElementById('completionStatusChart');
+    if (completionCtx) {
+        const completionLabels = completionData.labels || [];
+        const completionValues = completionData.data || [];
+        const completionColors = ['#10B981', '#F59E0B', '#EF4444'];
+
+        new Chart(completionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: completionLabels,
+                datasets: [{
+                    data: completionValues,
+                    backgroundColor: completionColors,
+                    borderColor: '#fff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
+</script>
+{% endblock %}

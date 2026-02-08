@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Course Management Platform{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card login-card">
+        <div id="errorMessage" class="alert alert-danger" style="display: none; margin-bottom: 20px;"></div>
+        <div id="successMessage" class="alert alert-success" style="display: none; margin-bottom: 20px;"></div>
+
+        <div class="auth-header">
+            <h1>Login</h1>
+            <p>Welcome back to Course Management Platform</p>
+        </div>
+
+        <form id="loginForm" class="auth-form">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    required 
+                    placeholder="Enter your email"
+                    class="form-control"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    required 
+                    placeholder="Enter your password"
+                    class="form-control"
+                >
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">
+                <span class="btn-text">Login</span>
+                <span class="btn-spinner" style="display: none;">
+                    <i class="spinner"></i>
+                </span>
+            </button>
+        </form>
+
+        <div class="auth-divider">
+            <span>Don't have an account?</span>
+        </div>
+
+        <a href="/register" class="btn btn-secondary btn-block">
+            Create Account
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const errorDiv = document.getElementById('errorMessage');
+    const successDiv = document.getElementById('successMessage');
+    const btn = this.querySelector('button[type="submit"]');
+    const btnText = btn.querySelector('.btn-text');
+    const btnSpinner = btn.querySelector('.btn-spinner');
+    
+    // Clear messages
+    errorDiv.style.display = 'none';
+    successDiv.style.display = 'none';
+    
+    try {
+        btn.disabled = true;
+        btnSpinner.style.display = 'inline-block';
+        
+        const response = await fetch('/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            successDiv.textContent = 'Login successful! Redirecting...';
+            successDiv.style.display = 'block';
+            setTimeout(() => {
+                window.location.href = data.redirect;
+            }, 1500);
+        } else {
+            errorDiv.textContent = data.error || 'Login failed. Please try again.';
+            errorDiv.style.display = 'block';
+            btn.disabled = false;
+            btnSpinner.style.display = 'none';
+        }
+    } catch (error) {
+        errorDiv.textContent = 'An error occurred. Please try again.';
+        errorDiv.style.display = 'block';
+        btn.disabled = false;
+        btnSpinner.style.display = 'none';
+    }
+});
+</script>
+{% endblock %}

@@ -58,7 +58,7 @@ def map_topic_to_course(
     )
 
 
-@router.get("/courses/{course_id}/topics")
+@router.get("/courses/{course_id}/topics", response_model=list[TopicResponse])
 def get_topics_by_course(
     course_id: int,
     db: Session = Depends(get_db)

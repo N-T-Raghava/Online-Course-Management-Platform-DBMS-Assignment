@@ -131,3 +131,24 @@ def get_topics_by_course_service(db: Session, course_id: int):
     )
 
     return mappings
+
+
+def get_university_by_course_service(db: Session, course_id: int):
+    # Validate course existence
+    course = course_repo.get_course_by_id(db, course_id)
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found"
+        )
+
+    university = course_repo.get_university_by_course(db, course_id)
+
+    if not university:
+        raise HTTPException(
+            status_code=404,
+            detail="University not found for this course"
+        )
+
+    return university

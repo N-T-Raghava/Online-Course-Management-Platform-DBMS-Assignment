@@ -14,6 +14,7 @@ from app.services.course_service import (
     create_course_service,
     get_all_courses_service,
     get_course_by_id_service
+    , get_university_by_course_service
 )
 
 # 🔐 Role Guards
@@ -94,3 +95,14 @@ def get_course_by_id(
     db: Session = Depends(get_db)
 ):
     return get_course_by_id_service(db, course_id)
+
+
+@router.get(
+    "/courses/{course_id}/university",
+    response_model=UniversityResponse
+)
+def get_university_by_course(
+    course_id: int,
+    db: Session = Depends(get_db)
+):
+    return get_university_by_course_service(db, course_id)

@@ -196,3 +196,60 @@ def assign_instructor_service(
         assigned_date,
         role_in_course
     )
+
+
+def get_public_reviews_by_course_service(
+    db: Session,
+    course_id: int
+):
+    """Fetch public reviews for a course"""
+    # Validate course exists
+    course = course_repo.get_course_by_id(db, course_id)
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found"
+        )
+
+    return participation_repo.get_public_reviews_by_course(db, course_id)
+
+
+def get_student_enrollments_service(
+    db: Session,
+    student_user_id: int
+):
+    """Fetch all enrollments for a student with course info"""
+    # Validate user exists
+    user = user_repo.get_user_by_id(db, student_user_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="Student not found"
+        )
+
+    return participation_repo.get_student_enrollments(db, student_user_id)
+
+
+def get_instructor_courses_service(
+    db: Session,
+    instructor_user_id: int
+):
+    """Fetch all courses taught by an instructor"""
+    # Validate user exists and is an instructor
+    user = user_repo.get_user_by_id(db, instructor_user_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    if user.role.lower() != "instructor":
+        raise HTTPException(
+            status_code=400,
+            detail="User is not an instructor"
+        )
+
+    return participation_repo.get_courses_by_instructor(db, instructor_user_id)

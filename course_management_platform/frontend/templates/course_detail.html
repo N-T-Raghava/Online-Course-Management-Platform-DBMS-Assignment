@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ course.title }} - Course Details{% endblock %}
+
+{% block content %}
+<div class="row" style="gap:20px;">
+    <div class="col-12 col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <h2>{{ course.title }}</h2>
+                <p class="text-muted">{{ course.category or 'General' }} • {{ course.level or 'All' }} • {{ course.language or 'N/A' }}</p>
+                <p style="margin-top:12px;">{{ course.description }}</p>
+
+                {% if topics %}
+                <hr>
+                <h5>Course Topics</h5>
+                <ul>
+                    {% for topic in topics %}
+                        <li>
+                            <strong>{{ topic.name }}</strong>
+                            {% if topic.description %}<p style="margin: 5px 0; color: var(--text-muted); font-size: 0.9em;">{{ topic.description }}</p>{% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+
+                {% if content %}
+                <hr>
+                <h5>Preview Content</h5>
+                <ul>
+                    {% for c in content %}
+                        <li>{{ c.title }} {% if c.content_type %}({{ c.content_type }}){% endif %}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+
+                {% if reviews %}
+                <hr>
+                <h5>Student Reviews</h5>
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    {% for review in reviews %}
+                        <div style="border: 1px solid var(--border-color); border-radius: 4px; padding: 12px; background: var(--light-color);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <strong>{{ review.student_name }}</strong>
+                                <div style="color: #ffc107; font-size: 14px;">
+                                    {% for i in range(review.rating) %}⭐{% endfor %}
+                                </div>
+                            </div>
+                            {% if review.review_text %}
+                            <p style="margin: 8px 0; color: var(--text-color); font-size: 0.95em;">{{ review.review_text }}</p>
+                            {% endif %}
+                            {% if review.rated_at %}
+                            <p style="margin: 5px 0; color: var(--text-muted); font-size: 0.85em;">{{ review.rated_at }}</p>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <h5>Course Info</h5>
+                <p><strong>Duration:</strong> {{ course.duration or 'N/A' }} hours</p>
+                <p><strong>Language:</strong> {{ course.language or 'N/A' }}</p>
+                
+                {% if university %}
+                <hr>
+                <h5>University</h5>
+                <p><strong>Name:</strong> {{ university.name }}</p>
+                <p><strong>Region:</strong> {{ university.region or 'N/A' }}</p>
+                <p><strong>Country:</strong> {{ university.country or 'N/A' }}</p>
+                {% if university.website %}
+                <p><strong>Website:</strong> <a href="{{ university.website }}" target="_blank">Visit</a></p>
+                {% endif %}
+                {% endif %}
+                
+                <hr>
+                <form method="post" action="/enroll/{{ course.course_id }}">
+                    <button type="submit" class="btn btn-success btn-block">Enroll Now</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

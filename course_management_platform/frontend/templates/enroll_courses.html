@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Enroll in Courses - Course Management Platform{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 40px;">
+    <h1 style="font-size: 28px; margin-bottom: 12px;">Discover & Enroll</h1>
+    <p style="color: var(--text-muted); font-size: 16px;">Find and enroll in courses that match your learning goals.</p>
+</div>
+
+<div class="row g-4">
+    {% for course in courses %}
+    <div class="col-12 col-sm-6 col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ course.title }}</h5>
+                <p class="card-text text-muted" style="font-size: 0.9em;">{{ course.category or 'General' }} • {{ course.level or 'All' }}</p>
+                <p class="card-text">{{ course.description[:120] }}{% if course.description|length > 120 %}...{% endif %}</p>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                    <small class="text-muted">{{ course.duration or 'N/A' }} hours</small>
+                </div>
+
+                <div style="display: flex; gap: 8px; margin-top: 12px;">
+                    <a href="{{ url_for('course_detail', course_id=course.course_id) }}" class="btn btn-secondary btn-small" style="flex: 1;">View Details</a>
+                    <form method="post" action="{{ url_for('enroll', course_id=course.course_id) }}" style="flex: 1;">
+                        <button type="submit" class="btn btn-success btn-small" style="width: 100%;">Enroll</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            <h5>No courses available</h5>
+            <p>Check back soon for new courses to enroll in.</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<a href="{{ url_for('dashboard') }}" class="btn btn-secondary" style="margin-top: 30px;">← Back to Dashboard</a>
+{% endblock %}

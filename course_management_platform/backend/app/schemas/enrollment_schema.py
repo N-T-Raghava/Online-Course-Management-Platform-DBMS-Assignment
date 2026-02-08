@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
-from datetime import date
+from datetime import date, datetime
 
 # Enroll Student
 class EnrollmentCreate(BaseModel):
@@ -18,3 +18,34 @@ class CompletionUpdate(BaseModel):
 class RatingUpdate(BaseModel):
     rating: int = Field(..., ge=1, le=5)
     review_text: Optional[str]
+
+
+# Public Review Response (displayed on course detail page)
+class PublicReviewResponse(BaseModel):
+    """Public review displayed on course detail page"""
+    student_name: str
+    rating: int
+    review_text: Optional[str]
+    rated_at: Optional[datetime]
+
+    class Config:
+        orm_mode = True
+
+
+# Student Enrollment Response
+class StudentEnrollmentResponse(BaseModel):
+    """Student enrollment with course details"""
+    course_id: int
+    course_title: str
+    category: Optional[str]
+    level: Optional[str]
+    duration: Optional[int]
+    enrollment_date: date
+    completion_status: Optional[str]
+    status: Optional[str]
+    grade: Optional[str]
+    rating: Optional[int]
+    completion_date: Optional[date]
+
+    class Config:
+        orm_mode = True

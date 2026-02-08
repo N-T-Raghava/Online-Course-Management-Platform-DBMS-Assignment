@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Date, String, Text, TIMESTAMP, ForeignKey
+from sqlalchemy import Column, Integer, Date, String, Text, TIMESTAMP, ForeignKey, Boolean
 from app.database import Base
 
 
@@ -15,6 +15,7 @@ class Enrollment(Base):
 
     rating = Column(Integer)
     review_text = Column(Text)
+    is_review_public = Column(Boolean, default=False)  # New: track if review is public
     rated_at = Column(TIMESTAMP)
 
     grade = Column(String(5))

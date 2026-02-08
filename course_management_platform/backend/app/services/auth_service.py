@@ -176,9 +176,15 @@ def login_user(db: Session, email: str, password: str):
 
     access_token = create_access_token(token_data)
 
-    return {
+    response_data = {
         "access_token": access_token,
         "token_type": "Bearer",
         "user_id": user.user_id,
         "role": user.role
     }
+
+    # Include admin_level if user is administrator
+    if user.role == "Administrator":
+        response_data["admin_level"] = token_data.get("admin_level")
+
+    return response_data

@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Course Management Platform{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card register-card">
+        <div id="errorMessage" class="alert alert-danger" style="display: none; margin-bottom: 20px;"></div>
+        <div id="successMessage" class="alert alert-success" style="display: none; margin-bottom: 20px;"></div>
+
+        <div class="auth-header">
+            <h1>Create Account</h1>
+            <p>Join Course Management Platform</p>
+        </div>
+
+        <form id="registerForm" class="auth-form">
+            <!-- Required Fields -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="name">Full Name *</label>
+                    <input 
+                        type="text" 
+                        id="name" 
+                        name="name" 
+                        required 
+                        placeholder="Enter your full name"
+                        minlength="2"
+                        maxlength="100"
+                        class="form-control"
+                    >
+                    <small class="form-text">2-100 characters</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address *</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        required 
+                        placeholder="Enter your email"
+                        class="form-control"
+                    >
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="password">Password *</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        required 
+                        placeholder="Enter password (min 6 characters)"
+                        minlength="6"
+                        class="form-control"
+                    >
+                    <small class="form-text">Minimum 6 characters</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="role">Role *</label>
+                    <select id="role" name="role" required class="form-control">
+                        <option value="">Select your role</option>
+                        <option value="Student">Student</option>
+                        <option value="Instructor">Instructor</option>
+                        <option value="Administrator">Administrator</option>
+                        <option value="DataAnalyst">Data Analyst</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Optional Fields -->
+            <div class="form-section-title">
+                <h3>Optional Information</h3>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="phone_number">Phone Number</label>
+                    <input 
+                        type="tel" 
+                        id="phone_number" 
+                        name="phone_number" 
+                        placeholder="Enter phone number"
+                        class="form-control"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="date_of_birth">Date of Birth</label>
+                    <input 
+                        type="date" 
+                        id="date_of_birth" 
+                        name="date_of_birth"
+                        class="form-control"
+                    >
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="country">Country</label>
+                    <input 
+                        type="text" 
+                        id="country" 
+                        name="country"
+                        placeholder="Enter your country"
+                        class="form-control"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="gender">Gender</label>
+                    <select id="gender" name="gender" class="form-control">
+                        <option value="">Select gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Role-Specific Fields -->
+            <div id="studentFields" class="role-specific-fields" style="display: none;">
+                <div class="form-section-title">
+                    <h3>Student Information</h3>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="education_level">Education Level</label>
+                        <select id="education_level" name="education_level" class="form-control">
+                            <option value="">Select education level</option>
+                            <option value="High School">High School</option>
+                            <option value="Bachelor">Bachelor's Degree</option>
+                            <option value="Master">Master's Degree</option>
+                            <option value="PhD">PhD</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="instructorFields" class="role-specific-fields" style="display: none;">
+                <div class="form-section-title">
+                    <h3>Instructor Information</h3>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="qualification">Qualification</label>
+                        <input 
+                            type="text" 
+                            id="qualification" 
+                            name="qualification"
+                            placeholder="e.g., M.Sc Computer Science"
+                            class="form-control"
+                        >
+                    </div>
+                    <div class="form-group">
+                        <label for="experience">Years of Experience</label>
+                        <input 
+                            type="number" 
+                            id="experience" 
+                            name="experience"
+                            min="0"
+                            placeholder="0"
+                            class="form-control"
+                        >
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="expertise_area">Area of Expertise</label>
+                        <input 
+                            type="text" 
+                            id="expertise_area" 
+                            name="expertise_area"
+                            placeholder="e.g., Web Development, Data Science"
+                            class="form-control"
+                        >
+                    </div>
+                    <div class="form-group">
+                        <label for="bio">Bio</label>
+                        <textarea 
+                            id="bio" 
+                            name="bio"
+                            rows="3"
+                            placeholder="Tell us about yourself"
+                            class="form-control"
+                        ></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div id="adminFields" class="role-specific-fields" style="display: none;">
+                <div class="form-section-title">
+                    <h3>Administrator Information</h3>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="admin_level">Admin Level</label>
+                        <select id="admin_level" name="admin_level" class="form-control">
+                            <option value="">Select admin level</option>
+                            <option value="Junior">Junior</option>
+                            <option value="Senior">Senior</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="assigned_since">Assigned Since</label>
+                        <input 
+                            type="date" 
+                            id="assigned_since" 
+                            name="assigned_since"
+                            class="form-control"
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <div id="analystFields" class="role-specific-fields" style="display: none;">
+                <div class="form-section-title">
+                    <h3>Data Analyst Information</h3>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="analyst_qualification">Qualification</label>
+                        <input 
+                            type="text" 
+                            id="analyst_qualification" 
+                            name="analyst_qualification"
+                            placeholder="e.g., Statistics, Data Science"
+                            class="form-control"
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">
+                <span class="btn-text">Create Account</span>
+                <span class="btn-spinner" style="display: none;">
+                    <i class="spinner"></i>
+                </span>
+            </button>
+        </form>
+
+        <div class="auth-divider">
+            <span>Already have an account?</span>
+        </div>
+
+        <a href="/login" class="btn btn-secondary btn-block">
+            Sign In
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Logic for dynamic Role Hints
+    const roleHints = {
+        'Student': 'Gain access to premium courses, track your progress, and earn certificates.',
+        'Instructor': 'Create courses, manage students, and share your knowledge with the world.',
+        'Administrator': 'Manage platform settings, monitor user activity, and maintain system integrity.'
+    };
+
+    document.getElementById('role').addEventListener('change', function() {
+        const hintBox = document.getElementById('roleHint');
+        const hintText = document.getElementById('roleHintText');
+        const val = this.value;
+
+        if (roleHints[val]) {
+            hintText.textContent = roleHints[val];
+            hintBox.style.display = 'block';
+        } else {
+            hintBox.style.display = 'none';
+        }
+    });
+    
+// Show/hide role-specific fields
+document.getElementById('role').addEventListener('change', function() {
+    const role = this.value;
+    
+    document.getElementById('studentFields').style.display = 'none';
+    document.getElementById('instructorFields').style.display = 'none';
+    document.getElementById('adminFields').style.display = 'none';
+    document.getElementById('analystFields').style.display = 'none';
+    
+    if (role === 'Student') {
+        document.getElementById('studentFields').style.display = 'block';
+    } else if (role === 'Instructor') {
+        document.getElementById('instructorFields').style.display = 'block';
+    } else if (role === 'Administrator') {
+        document.getElementById('adminFields').style.display = 'block';
+    } else if (role === 'DataAnalyst') {
+        document.getElementById('analystFields').style.display = 'block';
+    }
+});
+
+// Handle form submission
+document.getElementById('registerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const form = new FormData(this);
+    const data = Object.fromEntries(form);
+    
+    // Convert empty strings to null for optional fields
+    Object.keys(data).forEach(key => {
+        if (data[key] === '') {
+            data[key] = null;
+        }
+    });
+    
+    // Convert experience to number
+    if (data.experience) {
+        data.experience = parseInt(data.experience);
+    }
+    
+    const errorDiv = document.getElementById('errorMessage');
+    const successDiv = document.getElementById('successMessage');
+    const btn = this.querySelector('button[type="submit"]');
+    const btnText = btn.querySelector('.btn-text');
+    const btnSpinner = btn.querySelector('.btn-spinner');
+    
+    // Clear messages
+    errorDiv.style.display = 'none';
+    successDiv.style.display = 'none';
+    
+    // Validation
+    if (data.name.length < 2) {
+        errorDiv.textContent = 'Name must be at least 2 characters.';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    if (data.password.length < 6) {
+        errorDiv.textContent = 'Password must be at least 6 characters.';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    try {
+        btn.disabled = true;
+        btnSpinner.style.display = 'inline-block';
+        
+        const response = await fetch('/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            successDiv.textContent = result.message + ' Redirecting to login...';
+            successDiv.style.display = 'block';
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 2000);
+        } else {
+            errorDiv.textContent = result.error || 'Registration failed. Please try again.';
+            errorDiv.style.display = 'block';
+            btn.disabled = false;
+            btnSpinner.style.display = 'none';
+        }
+    } catch (error) {
+        errorDiv.textContent = 'An error occurred. Please try again.';
+        errorDiv.style.display = 'block';
+        btn.disabled = false;
+        btnSpinner.style.display = 'none';
+    }
+});
+</script>
+{% endblock %}

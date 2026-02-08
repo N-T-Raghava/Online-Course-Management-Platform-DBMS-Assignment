@@ -46,6 +46,14 @@ def get_course_by_id(db: Session, course_id: int):
     ).first()
 
 
+def get_university_by_course(db: Session, course_id: int):
+    # Fetch the course and return its related university if present
+    course = get_course_by_id(db, course_id)
+    if not course:
+        return None
+    return course.university
+
+
 # TOPIC OPERATIONS
 def create_topic(db: Session, data: dict) -> Topic:
     topic = Topic(**data)
@@ -86,6 +94,10 @@ def map_topic_to_course(
 
 
 def get_topics_by_course(db: Session, course_id: int):
-    return db.query(CourseTopic).filter(
+    # Join CourseTopic with Topic to get full topic details, ordered by sequence_order
+    return db.query(Topic).join(
+        CourseTopic,
+        CourseTopic.topic_id == Topic.topic_id
+    ).filter(
         CourseTopic.course_id == course_id
-    ).all()
+    ).order_by(CourseTopic.sequence_order).all()

@@ -1,0 +1,420 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Course Content{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-container {
+        max-width: 600px;
+        margin: 40px auto;
+    }
+
+    .upload-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+
+    .upload-header {
+        background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+        color: white;
+        padding: 30px 20px;
+        text-align: center;
+    }
+
+    .upload-header h1 {
+        margin: 0 0 8px 0;
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    .upload-header p {
+        margin: 0;
+        opacity: 0.95;
+        font-size: 14px;
+    }
+
+    .upload-body {
+        padding: 40px 30px;
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: var(--dark-color);
+        font-size: 14px;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-family: inherit;
+        font-size: 14px;
+        transition: var(--transition);
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #8B5CF6;
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+
+    .form-help {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 6px;
+    }
+
+    .required-fields {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-bottom: 20px;
+        padding: 12px;
+        background: #F3F4F6;
+        border-radius: 4px;
+    }
+
+    .required-fields strong {
+        color: var(--dark-color);
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 30px;
+    }
+
+    .btn-submit {
+        flex: 1;
+        background: #8B5CF6;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        font-size: 14px;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+        background: #7C3AED;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+    }
+
+    .btn-submit:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .btn-cancel {
+        flex: 1;
+        background: var(--secondary-color);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+    }
+
+    .btn-cancel:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+    }
+
+    .course-selector {
+        background: #F3F4F6;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+
+    .course-selector h6 {
+        margin: 0 0 8px 0;
+        font-size: 12px;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        font-weight: 600;
+    }
+
+    .course-selector p {
+        margin: 0;
+        font-weight: 600;
+        color: var(--dark-color);
+    }
+
+    .error-message {
+        background: #FEE2E2;
+        color: #DC2626;
+        padding: 12px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        display: none;
+        border-left: 4px solid #DC2626;
+    }
+
+    .success-message {
+        background: #D1FAE5;
+        color: #059669;
+        padding: 12px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        display: none;
+        border-left: 4px solid #059669;
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 0.8s linear infinite;
+        margin-right: 8px;
+        vertical-align: middle;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 600px) {
+        .upload-container {
+            margin: 20px 0;
+        }
+
+        .upload-body {
+            padding: 20px;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn-submit, .btn-cancel {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <div class="upload-card">
+        <div class="upload-header">
+            <h1>📚 Upload Course Content</h1>
+            <p>Share educational materials with your students</p>
+        </div>
+
+        <div class="upload-body">
+            {% if course_id %}
+            <div class="course-selector">
+                <h6>Selected Course</h6>
+                <p>{{ selected_course_title or 'Loading...' }}</p>
+            </div>
+            {% else %}
+            <div style="background: #FEE2E2; padding: 15px; border-radius: 4px; margin-bottom: 20px; border-left: 4px solid #DC2626;">
+                <p style="margin: 0; color: #DC2626; font-weight: 600;">⚠️ No course selected</p>
+                <p style="margin: 5px 0 0 0; font-size: 13px; color: #991B1B;">Please select a course from your dashboard first.</p>
+                <a href="{{ url_for('instructor_dashboard') }}" style="color: #059669; text-decoration: underline; font-size: 13px; margin-top: 10px; display: inline-block;">Return to Dashboard</a>
+            </div>
+            {% endif %}
+
+            <div id="error-message" class="error-message"></div>
+            <div id="success-message" class="success-message"></div>
+
+            <div class="required-fields">
+                <strong>* Required fields</strong>
+            </div>
+
+            <form id="upload-form" onsubmit="handleUploadForm(event)">
+                <div class="form-group">
+                    <label for="course-select">Select Course *</label>
+                    <select id="course-select" required>
+                        <option value="">-- Choose a course --</option>
+                        {% for course in instructor_courses %}
+                        <option value="{{ course.course_id }}" {% if course.course_id == course_id %}selected{% endif %}>
+                            {{ course.course_title }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <p class="form-help">Select which course this content belongs to</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="content-title">Content Title *</label>
+                    <input type="text" id="content-title" required placeholder="e.g., Introduction to Python Basics">
+                    <p class="form-help">Give your content a clear, descriptive title</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="content-type">Content Type *</label>
+                    <select id="content-type" required>
+                        <option value="">-- Select type --</option>
+                        <option value="Video">📹 Video Lecture</option>
+                        <option value="Document">📄 Document / Article</option>
+                        <option value="Presentation">🎯 Presentation / Slides</option>
+                        <option value="Quiz">❓ Quiz / Assessment</option>
+                        <option value="Exercise">💪 Exercise / Assignment</option>
+                        <option value="Resource">📊 Resource / Dataset</option>
+                        <option value="Other">📎 Other</option>
+                    </select>
+                    <p class="form-help">Choose the type of content</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="file-url">File URL / Link *</label>
+                    <input type="url" id="file-url" required placeholder="https://example.com/path/to/file.pdf">
+                    <p class="form-help">Provide the full URL where your content is hosted</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="topic-select">Topic (Optional)</label>
+                    <select id="topic-select">
+                        <option value="">-- No specific topic --</option>
+                        {% for topic in course_topics %}
+                        <option value="{{ topic.topic_id }}">{{ topic.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="form-help">Link this content to a specific course topic</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description (Optional)</label>
+                    <textarea id="description" rows="4" placeholder="Describe what this content covers and what students should learn..."></textarea>
+                    <p class="form-help">Help students understand the content scope and objectives</p>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" id="submit-btn" class="btn-submit">
+                        <span id="submit-text">Upload Content</span>
+                    </button>
+                    <a href="{{ url_for('instructor_dashboard') }}" class="btn-cancel">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Handle form submission
+    async function handleUploadForm(event) {
+        event.preventDefault();
+
+        const courseId = document.getElementById('course-select').value;
+        const title = document.getElementById('content-title').value;
+        const contentType = document.getElementById('content-type').value;
+        const fileUrl = document.getElementById('file-url').value;
+        const topicId = document.getElementById('topic-select').value;
+        const description = document.getElementById('description').value;
+
+        // Validate
+        if (!courseId || !title || !contentType || !fileUrl) {
+            showError('Please fill in all required fields');
+            return;
+        }
+
+        // Show loading state
+        const submitBtn = document.getElementById('submit-btn');
+        const submitText = document.getElementById('submit-text');
+        submitBtn.disabled = true;
+        submitText.innerHTML = '<span class="loading-spinner"></span>Uploading...';
+
+        // Prepare payload
+        const payload = {
+            course_id: parseInt(courseId),
+            title: title,
+            content_type: contentType,
+            file_url: fileUrl,
+            topic_id: topicId ? parseInt(topicId) : null,
+            description: description || null,
+            instructor_user_id: {{ user.user_id }}
+        };
+
+        try {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const response = await fetch('{{ url_for("api_upload_content") }}' || '/api/upload-content', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (response.ok || data.success) {
+                showSuccess('Content uploaded successfully!');
+                setTimeout(() => {
+                    window.location.href = '{{ url_for("instructor_course_detail", course_id=0) }}'.replace('/0', `/${courseId}`);
+                }, 1500);
+            } else {
+                showError(data.error || data.detail || 'Upload failed. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showError('Network error. Please check your connection and try again.');
+        } finally {
+            submitBtn.disabled = false;
+            submitText.innerHTML = 'Upload Content';
+        }
+    }
+
+    // Show error message
+    function showError(message) {
+        const errorDiv = document.getElementById('error-message');
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+        
+        // Hide success message if visible
+        document.getElementById('success-message').style.display = 'none';
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            errorDiv.style.display = 'none';
+        }, 5000);
+    }
+
+    // Show success message
+    function showSuccess(message) {
+        const successDiv = document.getElementById('success-message');
+        successDiv.textContent = message;
+        successDiv.style.display = 'block';
+        
+        // Hide error message if visible
+        document.getElementById('error-message').style.display = 'none';
+    }
+
+    // Load instructor courses on page load
+    window.addEventListener('DOMContentLoaded', function() {
+        const courseSelect = document.getElementById('course-select');
+        if (courseSelect && courseSelect.options.length === 1) {
+            // Will be pre-populated by Flask template
+        }
+    });
+</script>
+{% endblock %}
