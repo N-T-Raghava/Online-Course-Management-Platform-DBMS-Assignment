@@ -25,4 +25,7 @@ htmlcov/
 # Logs
 *.log
 
-/flask_session/
+# Flask instance files
+instance/
+# Flask session files
+flask_session/
