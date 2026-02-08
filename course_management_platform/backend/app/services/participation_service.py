@@ -253,3 +253,148 @@ def get_instructor_courses_service(
         )
 
     return participation_repo.get_courses_by_instructor(db, instructor_user_id)
+
+
+# TOPIC PROGRESSION SERVICES
+
+def update_topic_progress_service(
+    db: Session,
+    student_user_id: int,
+    course_id: int,
+    topic_id: int,
+    current_user: dict
+):
+    """
+    Update topic progression for a student.
+    • Validates student is accessing their own data
+    • Validates course and topic exist
+    • Updates enrollment.current_topic
+    • Returns updated enrollment
+    """
+
+    # --------------------------------------------------------
+    # SELF CHECK
+    # --------------------------------------------------------
+    if current_user["role"] == Role.STUDENT.value:
+        if current_user["user_id"] != student_user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Students can update only their progress"
+            )
+
+    # Validate user exists and is a student
+    user = user_repo.get_user_by_id(db, student_user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Student not found")
+    if user.role.lower() != "student":
+        raise HTTPException(status_code=400, detail="User is not a student")
+
+    # Validate course exists
+    course = course_repo.get_course_by_id(db, course_id)
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    # Validate topic exists
+    topic = course_repo.get_topic_by_id(db, topic_id)
+    if not topic:
+        raise HTTPException(status_code=404, detail="Topic not found")
+
+    # Get enrollment
+    enrollment = participation_repo.get_enrollment(db, student_user_id, course_id)
+    if not enrollment:
+        raise HTTPException(status_code=404, detail="Enrollment not found")
+
+    # Update current_topic
+    return participation_repo.update_topic_progress(
+        db,
+        enrollment,
+        topic_id
+    )
+
+
+def submit_assessment_service(
+    db: Session,
+    student_user_id: int,
+    course_id: int,
+    score: int,
+    current_user: dict
+):
+    """
+    Submit assessment and calculate grade.
+    • Validates student is accessing their own data
+    • Maps score to grade (90-100:A, 75-89:B, 60-74:C, 50-59:D, <50:F)
+    • Updates enrollment.grade
+    • Auto-completes course if grade != F
+    • Returns score, grade, and completion status
+    """
+
+    # --------------------------------------------------------
+    # SELF CHECK
+    # --------------------------------------------------------
+    if current_user["role"] == Role.STUDENT.value:
+        if current_user["user_id"] != student_user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Students can submit only their assessments"
+            )
+
+    # Validate user exists and is a student
+    user = user_repo.get_user_by_id(db, student_user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Student not found")
+    if user.role.lower() != "student":
+        raise HTTPException(status_code=400, detail="User is not a student")
+
+    # Validate course exists
+    course = course_repo.get_course_by_id(db, course_id)
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    # Get enrollment
+    enrollment = participation_repo.get_enrollment(db, student_user_id, course_id)
+    if not enrollment:
+        raise HTTPException(status_code=404, detail="Enrollment not found")
+
+    # Map score to grade
+    grade = _map_score_to_grade(score)
+
+    # Update grade
+    participation_repo.update_grade(db, enrollment, grade)
+
+    # Auto-complete if grade != F
+    if grade != "F":
+        participation_repo.update_completion(
+            db,
+            enrollment,
+            "Completed",
+            date.today()
+        )
+
+    # Return result
+    return {
+        "score": score,
+        "grade": grade,
+        "completion_status": "Completed" if grade != "F" else "Ongoing",
+        "message": "Course completed successfully!" if grade != "F" else "Please attempt again to pass the course"
+    }
+
+
+def _map_score_to_grade(score: int) -> str:
+    """
+    Map score to grade.
+    90 – 100 → A
+    75 – 89 → B
+    60 – 74 → C
+    50 – 59 → D
+    Below 50 → F
+    """
+    if score >= 90:
+        return "A"
+    elif score >= 75:
+        return "B"
+    elif score >= 60:
+        return "C"
+    elif score >= 50:
+        return "D"
+    else:
+        return "F"

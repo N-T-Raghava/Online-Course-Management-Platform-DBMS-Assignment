@@ -14,6 +14,15 @@ class CompletionUpdate(BaseModel):
     completion_date: Optional[date]
 
 
+# Topic Progress Update
+class ProgressUpdate(BaseModel):
+    """Update topic progression for a student"""
+    topic_id: int
+
+    class Config:
+        orm_mode = True
+
+
 # Rating Schema
 class RatingUpdate(BaseModel):
     rating: int = Field(..., ge=1, le=5)
@@ -46,6 +55,16 @@ class StudentEnrollmentResponse(BaseModel):
     grade: Optional[str]
     rating: Optional[int]
     completion_date: Optional[date]
+    current_topic: Optional[int]
+
+    class Config:
+        orm_mode = True
+
+
+# Assessment Submission
+class AssessmentSubmission(BaseModel):
+    """Submit assessment with score"""
+    score: int = Field(..., ge=0, le=100)
 
     class Config:
         orm_mode = True

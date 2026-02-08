@@ -7,14 +7,18 @@ from app.schemas.enrollment_schema import (
     CompletionUpdate,
     RatingUpdate,
     PublicReviewResponse,
-    StudentEnrollmentResponse
+    StudentEnrollmentResponse,
+    ProgressUpdate,
+    AssessmentSubmission
 )
 from app.services.participation_service import (
     enroll_student_service,
     update_completion_service,
     rate_course_service,
     get_public_reviews_by_course_service,
-    get_student_enrollments_service
+    get_student_enrollments_service,
+    update_topic_progress_service,
+    submit_assessment_service
 )
 
 # 🔐 Auth Dependency (JWT Payload)
@@ -117,3 +121,52 @@ def get_student_enrollments(
     current_user: dict = Depends(get_current_user)
 ):
     return get_student_enrollments_service(db, student_user_id)
+
+
+# ------------------------------------------------------------
+# UPDATE TOPIC PROGRESS
+# • Student → Self only
+# • Admin → Override allowed
+# • Stores last completed topic_id
+# • Auto-saves progression
+# ------------------------------------------------------------
+@router.put("/progress/{student_user_id}/{course_id}/{topic_id}")
+def update_topic_progress(
+    student_user_id: int,
+    course_id: int,
+    topic_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    return update_topic_progress_service(
+        db,
+        student_user_id,
+        course_id,
+        topic_id,
+        current_user
+    )
+
+
+# ------------------------------------------------------------
+# SUBMIT ASSESSMENT
+# • Student → Self only
+# • Admin → Override allowed
+# • Calculate score → grade mapping
+# • Auto-complete course if grade != F
+# • Returns score, grade, and completion status
+# ------------------------------------------------------------
+@router.post("/assessment/{student_user_id}/{course_id}")
+def submit_assessment(
+    student_user_id: int,
+    course_id: int,
+    payload: AssessmentSubmission,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    return submit_assessment_service(
+        db,
+        student_user_id,
+        course_id,
+        payload.score,
+        current_user
+    )

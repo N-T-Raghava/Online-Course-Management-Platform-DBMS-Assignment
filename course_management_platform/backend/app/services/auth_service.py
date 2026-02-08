@@ -3,7 +3,7 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
-from app.core.security import hash_password, verify_password
+from app.core.security import store_password, verify_password
 from app.core.jwt_handler import create_access_token
 
 from app.repositories import user_repo
@@ -34,10 +34,10 @@ def register_user(db: Session, payload: RegisterRequest):
         )
 
     # --------------------------------------------------------
-    # HASH PASSWORD
+    # STORE PASSWORD (PLAIN TEXT - NO HASHING)
     # --------------------------------------------------------
 
-    hashed_pw = hash_password(payload.password)
+    stored_pw = store_password(payload.password)
 
     # --------------------------------------------------------
     # CREATE BASE USER
@@ -46,7 +46,7 @@ def register_user(db: Session, payload: RegisterRequest):
     user_data = {
         "name": payload.name,
         "email": payload.email,
-        "password": hashed_pw,
+        "password": stored_pw,
         "phone_number": payload.phone_number,
         "role": payload.role
     }

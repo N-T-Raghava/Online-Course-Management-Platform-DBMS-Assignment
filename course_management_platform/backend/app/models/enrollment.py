@@ -19,3 +19,4 @@ class Enrollment(Base):
     rated_at = Column(TIMESTAMP)
 
     grade = Column(String(5))
+    current_topic = Column(Integer, ForeignKey("topic.topic_id", ondelete="SET NULL"), nullable=True)  # Topic progression tracking

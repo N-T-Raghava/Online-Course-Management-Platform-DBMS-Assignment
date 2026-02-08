@@ -166,7 +166,8 @@ def get_student_enrollments(
             'status': enrollment.status,
             'grade': enrollment.grade,
             'rating': enrollment.rating,
-            'completion_date': enrollment.completion_date
+            'completion_date': enrollment.completion_date,
+            'current_topic': enrollment.current_topic
         })
     
     return result
@@ -216,3 +217,29 @@ def get_courses_by_instructor(
         })
     
     return result
+
+
+# TOPIC PROGRESSION OPERATIONS
+
+def update_topic_progress(
+    db: Session,
+    enrollment: Enrollment,
+    topic_id: int
+):
+    """Update current_topic for an enrollment"""
+    enrollment.current_topic = topic_id
+    db.commit()
+    db.refresh(enrollment)
+    return enrollment
+
+
+def update_grade(
+    db: Session,
+    enrollment: Enrollment,
+    grade: str
+):
+    """Update grade for an enrollment"""
+    enrollment.grade = grade
+    db.commit()
+    db.refresh(enrollment)
+    return enrollment
