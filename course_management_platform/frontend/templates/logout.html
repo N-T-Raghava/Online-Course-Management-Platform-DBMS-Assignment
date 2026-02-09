@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logging out...</title>
+    <script>
+        // Clear all stored tokens and session data
+        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
+        
+        // Redirect to login
+        window.location.href = '/login';
+    </script>
+</head>
+<body>
+    <p>Logging you out...</p>
+</body>
+</html>

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Profile - Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .navbar h1 {
+            font-size: 1.5rem;
+        }
+
+        .navbar-right {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn-back {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-back:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .profile-header {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .profile-title {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-subtitle {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .profile-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .profile-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            color: #667eea;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .profile-detail {
+            margin-bottom: 1rem;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            margin-bottom: 0.3rem;
+        }
+
+        .detail-value {
+            color: #333;
+            font-size: 1rem;
+        }
+
+        .course-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s;
+        }
+
+        .course-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .course-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .course-info {
+            font-size: 0.85rem;
+            color: #666;
+            margin: 0.3rem 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .completion-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-in-progress {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .rating-item {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #ffc107;
+        }
+
+        .rating-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .rating-course {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .rating-value {
+            color: #ffc107;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .rating-text {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .profile-content {
+                grid-template-columns: 1fr;
+            }
+
+            .course-info {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>Student Profile</h1>
+        <div class="navbar-right">
+            <button class="btn-back" onclick="goBackToDashboard()">← Back to Dashboard</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="errorMessage" class="error-message"></div>
+
+        <div id="loadingArea" class="profile-header">
+            <div class="loading">Loading student profile...</div>
+        </div>
+
+        <div id="profileArea" style="display: none;">
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <div class="profile-title" id="studentName"></div>
+                <div class="profile-subtitle" id="studentEmail"></div>
+            </div>
+
+            <!-- Profile Detail and Courses/Ratings -->
+            <div class="profile-content">
+                <!-- Left Side: Student Details -->
+                <div>
+                    <div class="profile-section">
+                        <h2 class="section-title">Personal Information</h2>
+                        
+                        <div class="profile-detail">
+                            <div class="detail-label">Email</div>
+                            <div class="detail-value" id="detailEmail">-</div>
+                        </div>
+
+                        <div class="profile-detail">
+                            <div class="detail-label">Date of Birth</div>
+                            <div class="detail-value" id="detailDOB">-</div>
+                        </div>
+
+                        <div class="profile-detail">
+                            <div class="detail-label">Country</div>
+                            <div class="detail-value" id="detailCountry">-</div>
+                        </div>
+
+                        <div class="profile-detail">
+                            <div class="detail-label">Gender</div>
+                            <div class="detail-value" id="detailGender">-</div>
+                        </div>
+
+                        <div class="profile-detail">
+                            <div class="detail-label">Education Level</div>
+                            <div class="detail-value" id="detailEducation">-</div>
+                        </div>
+
+                        <div class="profile-detail">
+                            <div class="detail-label">Courses Taken</div>
+                            <div class="detail-value" id="totalCourses">0</div>
+                        </div>
+
+                        <div class="profile-detail">
+                            <div class="detail-label">Ratings Given</div>
+                            <div class="detail-value" id="totalRatings">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side: Courses and Ratings -->
+                <div>
+                    <!-- Courses Section -->
+                    <div class="profile-section">
+                        <h2 class="section-title">Enrolled Courses</h2>
+                        <div id="coursesList"></div>
+                    </div>
+
+                    <!-- Ratings Section -->
+                    <div class="profile-section" id="ratingsSection" style="display: none; margin-top: 2rem;">
+                        <h2 class="section-title">Course Ratings</h2>
+                        <div id="ratingsList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:8000";
+
+        // ============================================================
+        // INITIALIZATION
+        // ============================================================
+
+        async function loadStudentProfile() {
+            const studentId = localStorage.getItem('selectedStudentId');
+            const token = localStorage.getItem('adminToken') || sessionStorage.getItem('token');
+
+            if (!studentId || !token) {
+                showError('Student ID or token not found. Please go back to dashboard.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/admin/students/${studentId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    showError('Failed to load student profile');
+                    document.getElementById('loadingArea').style.display = 'none';
+                    return;
+                }
+
+                const profile = await response.json();
+                displayStudentProfile(profile);
+            } catch (error) {
+                console.error('Error loading student profile:', error);
+                showError('Error loading student profile');
+                document.getElementById('loadingArea').style.display = 'none';
+            }
+        }
+
+        function displayStudentProfile(profile) {
+            // Header info
+            document.getElementById('studentName').textContent = profile.student_name;
+            document.getElementById('studentEmail').textContent = profile.student_email;
+
+            // Personal details
+            document.getElementById('detailEmail').textContent = profile.student_email;
+            document.getElementById('detailDOB').textContent = profile.date_of_birth || '-';
+            document.getElementById('detailCountry').textContent = profile.country || '-';
+            document.getElementById('detailGender').textContent = profile.gender || '-';
+            document.getElementById('detailEducation').textContent = profile.education_level || '-';
+            document.getElementById('totalCourses').textContent = profile.total_courses;
+            document.getElementById('totalRatings').textContent = profile.total_ratings;
+
+            // Courses
+            const coursesList = document.getElementById('coursesList');
+            if (profile.courses && profile.courses.length > 0) {
+                coursesList.innerHTML = profile.courses.map(course => {
+                    const statusClass = `status-${(course.completion_status || 'pending').toLowerCase()}`;
+                    return `
+                        <div class="course-card">
+                            <div class="course-name">${course.course_name}</div>
+                            <div class="course-info">
+                                <span>${course.category}</span>
+                                <span>Level: ${course.level}</span>
+                            </div>
+                            <div class="course-info">
+                                <span>Enrolled: ${course.enrollment_date || '-'}</span>
+                                <span>${course.grade ? 'Grade: ' + course.grade : ''}</span>
+                            </div>
+                            <span class="completion-badge ${statusClass}">
+                                ${course.completion_status || 'Pending'}
+                            </span>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                coursesList.innerHTML = '<div class="no-data">No courses enrolled</div>';
+            }
+
+            // Ratings
+            if (profile.ratings && profile.ratings.length > 0) {
+                document.getElementById('ratingsSection').style.display = 'block';
+                const ratingsList = document.getElementById('ratingsList');
+                ratingsList.innerHTML = profile.ratings.map(rating => `
+                    <div class="rating-item">
+                        <div class="rating-header">
+                            <span class="rating-course">${rating.course_name}</span>
+                            <span class="rating-value">⭐ ${rating.rating}/5</span>
+                        </div>
+                        ${rating.is_review_public ? '<span style="background: #667eea; color: white; padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.8rem;">Public</span>' : '<span style="background: #6c757d; color: white; padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.8rem;">Private</span>'}
+                        ${rating.review_text ? `<div class="rating-text">"${rating.review_text}"</div>` : ''}
+                    </div>
+                `).join('');
+            }
+
+            // Show profile, hide loading
+            document.getElementById('loadingArea').style.display = 'none';
+            document.getElementById('profileArea').style.display = 'block';
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            setTimeout(() => {
+                errorEl.style.display = 'none';
+            }, 5000);
+        }
+
+        function goBackToDashboard() {
+            localStorage.removeItem('selectedStudentId');
+            localStorage.removeItem('adminToken');
+            window.location.href = '/admin/dashboard';
+        }
+
+        // ============================================================
+        // INITIALIZE ON PAGE LOAD
+        // ============================================================
+
+        window.addEventListener('load', loadStudentProfile);
+    </script>
+</body>
+</html>

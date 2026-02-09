@@ -19,6 +19,17 @@ class CourseService:
             return False, []
 
     @staticmethod
+    def get_all_universities() -> Tuple[bool, Any]:
+        """Fetch all universities"""
+        try:
+            resp = requests.get(f"{BACKEND_URL}/universities", timeout=10)
+            if resp.status_code == 200:
+                return True, resp.json()
+            return False, []
+        except requests.exceptions.RequestException:
+            return False, []
+
+    @staticmethod
     def get_course_by_id(course_id: int) -> Tuple[bool, Any]:
         try:
             resp = requests.get(f"{BACKEND_URL}/courses/{course_id}", timeout=10)
@@ -65,6 +76,53 @@ class CourseService:
         """Fetch all public reviews for a given course_id"""
         try:
             resp = requests.get(f"{BACKEND_URL}/enrollments/reviews/{course_id}", timeout=10)
+            if resp.status_code == 200:
+                return True, resp.json()
+            return False, []
+        except requests.exceptions.RequestException:
+            return False, []
+
+    @staticmethod
+    def create_instructor_course(course_data: dict, token: str) -> Tuple[bool, Any]:
+        """Create a new course as an instructor (pending approval)"""
+        try:
+            headers = {
+                'Authorization': f'Bearer {token}',
+                'Content-Type': 'application/json'
+            }
+            resp = requests.post(
+                f"{BACKEND_URL}/courses/instructor/create",
+                json=course_data,
+                headers=headers,
+                timeout=10
+            )
+            
+            # Always try to parse response as JSON
+            try:
+                response_data = resp.json()
+            except:
+                response_data = {"error": resp.text or "Unknown error"}
+            
+            if resp.status_code in [200, 201]:
+                return True, response_data
+            
+            # For error responses, return the full error details
+            return False, response_data
+        except requests.exceptions.RequestException as e:
+            return False, {"error": str(e)}
+
+    @staticmethod
+    def get_instructor_pending_courses(token: str) -> Tuple[bool, Any]:
+        """Get instructor's courses pending approval"""
+        try:
+            headers = {
+                'Authorization': f'Bearer {token}',
+            }
+            resp = requests.get(
+                f"{BACKEND_URL}/courses/instructor/pending",
+                headers=headers,
+                timeout=10
+            )
             if resp.status_code == 200:
                 return True, resp.json()
             return False, []

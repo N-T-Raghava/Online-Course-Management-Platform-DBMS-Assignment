@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Course Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .navbar h1 {
+            font-size: 1.5rem;
+        }
+
+        .navbar-right {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .admin-badge {
+            background: rgba(255,255,255,0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-button:hover {
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .course-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .course-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .course-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+        }
+
+        .course-header h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .course-category {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .course-body {
+            padding: 1.5rem;
+        }
+
+        .course-info {
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .course-info label {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .course-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .course-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            flex: 1;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .btn-sm {
+            padding: 0.35rem 0.75rem;
+            font-size: 0.85rem;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 1.3rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .modal-section {
+            margin-bottom: 2rem;
+        }
+
+        .modal-section h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-box {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .rating-item {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+
+        .rating-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .rating-student {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .rating-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .student-item {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #667eea;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .student-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .student-name {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .student-info {
+            font-size: 0.85rem;
+            color: #666;
+            margin: 0.25rem 0;
+        }
+
+        .rating-value {
+            color: #ffc107;
+            font-weight: bold;
+        }
+
+        .rating-text {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #ddd;
+        }
+
+        .modal-actions .btn {
+            flex: 1;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #666;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 1.1rem;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .courses-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                overflow-x: auto;
+            }
+
+            .tab-button {
+                padding: 1rem 1rem;
+            }
+
+            .stat-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <div class="navbar">
+        <h1>📚 Admin Dashboard</h1>
+        <div class="navbar-right">
+            <span class="admin-badge">👤 <span id="adminLevel">Junior</span> Admin</span>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Messages -->
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-button active" data-tab="pending">
+                ⏳ Pending Approval
+            </button>
+            <button class="tab-button" data-tab="all">
+                📖 All Courses
+            </button>
+        </div>
+
+        <!-- Pending Courses Tab -->
+        <div id="pending" class="tab-content active">
+            <div id="pendingCourses"></div>
+        </div>
+
+        <!-- All Courses Tab -->
+        <div id="all" class="tab-content">
+            <div id="allCourses"></div>
+        </div>
+    </div>
+
+    <!-- Course Details Modal -->
+    <div id="courseModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Course Details</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <h3>Course Information</h3>
+                    <div class="stat-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">Category</div>
+                            <div class="stat-value" id="modalCategory">-</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Duration</div>
+                            <div class="stat-value" id="modalDuration">-</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Level</div>
+                            <div class="stat-value" id="modalLevel">-</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Language</div>
+                            <div class="stat-value" id="modalLanguage">-</div>
+                        </div>
+                    </div>
+                    <p id="modalDescription" style="margin-top: 1rem; color: #666;"></p>
+                </div>
+
+                <div class="modal-section" id="statisticsSection" style="display: none;">
+                    <h3>Enrollment Statistics</h3>
+                    <div class="stat-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">Total Enrolled</div>
+                            <div class="stat-value" id="statEnrolled">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Completed</div>
+                            <div class="stat-value" id="statCompleted">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">In Progress</div>
+                            <div class="stat-value" id="statInProgress">0</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Completion Rate</div>
+                            <div class="stat-value" id="statCompletionRate">0%</div>
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Average Rating</div>
+                        <div class="stat-value" id="statAvgRating">-</div>
+                    </div>
+                </div>
+
+                <div class="modal-section" id="ratingsSection" style="display: none;">
+                    <h3>Student Ratings & Reviews</h3>
+                    <div id="ratingsList"></div>
+                </div>
+
+                <div class="modal-section" id="studentsSection" style="display: none;">
+                    <h3>Enrolled Students</h3>
+                    <div id="studentsList"></div>
+                </div>
+
+                <div class="modal-actions" id="modalActions">
+                    <button class="btn btn-danger" onclick="closeModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:8000";
+        let currentCourseId = null;
+
+        // ============================================================
+        // UTILITY FUNCTIONS
+        // ============================================================
+
+        function getToken() {
+            return localStorage.getItem('token') || sessionStorage.getItem('token') || '';
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            setTimeout(() => {
+                errorEl.style.display = 'none';
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            const successEl = document.getElementById('successMessage');
+            successEl.textContent = message;
+            successEl.style.display = 'block';
+            setTimeout(() => {
+                successEl.style.display = 'none';
+            }, 5000);
+        }
+
+        // ============================================================
+        // INITIALIZATION
+        // ============================================================
+
+        async function initDashboard() {
+            const token = getToken();
+            
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
+            try {
+                // Fetch user info and admin level
+                const meResponse = await fetch(`${API_URL}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (meResponse.ok) {
+                    const user = await meResponse.json();
+                    const adminLevel = user.admin_level || 'Junior';
+                    document.getElementById('adminLevel').textContent = adminLevel;
+                }
+
+                // Load initial courses
+                await loadPendingCourses();
+            } catch (error) {
+                console.error('Error initializing dashboard:', error);
+            }
+        }
+
+        // ============================================================
+        // TAB NAVIGATION
+        // ============================================================
+
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', async () => {
+                const tabName = button.dataset.tab;
+
+                // Update active button
+                document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                button.classList.add('active');
+
+                // Show active tab
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+                document.getElementById(tabName).classList.add('active');
+
+                // Load appropriate data
+                if (tabName === 'pending') {
+                    await loadPendingCourses();
+                } else if (tabName === 'all') {
+                    await loadAllCourses();
+                }
+            });
+        });
+
+        // ============================================================
+        // LOAD PENDING COURSES
+        // ============================================================
+
+        async function loadPendingCourses() {
+            const token = getToken();
+            const container = document.getElementById('pendingCourses');
+            container.innerHTML = '<div class="loading">Loading pending courses...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/admin/courses/pending/list`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    container.innerHTML = '<div class="no-data">Failed to load pending courses</div>';
+                    return;
+                }
+
+                const courses = await response.json();
+
+                if (courses.length === 0) {
+                    container.innerHTML = '<div class="no-data">No courses pending approval</div>';
+                    return;
+                }
+
+                container.innerHTML = `<div class="courses-grid">${
+                    courses.map(course => createCourseCard(course)).join('')
+                }</div>`;
+            } catch (error) {
+                console.error('Error loading pending courses:', error);
+                container.innerHTML = '<div class="no-data">Error loading courses. Please try again.</div>';
+            }
+        }
+
+        // ============================================================
+        // LOAD ALL COURSES
+        // ============================================================
+
+        async function loadAllCourses() {
+            const token = getToken();
+            const container = document.getElementById('allCourses');
+            container.innerHTML = '<div class="loading">Loading courses...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/admin/courses`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    container.innerHTML = '<div class="no-data">Failed to load courses</div>';
+                    return;
+                }
+
+                const courses = await response.json();
+
+                if (courses.length === 0) {
+                    container.innerHTML = '<div class="no-data">No courses found</div>';
+                    return;
+                }
+
+                container.innerHTML = `<div class="courses-grid">${
+                    courses.map(course => createCourseCard(course, true)).join('')
+                }</div>`;
+            } catch (error) {
+                console.error('Error loading all courses:', error);
+                container.innerHTML = '<div class="no-data">Error loading courses. Please try again.</div>';
+            }
+        }
+
+        // ============================================================
+        // CREATE COURSE CARD
+        // ============================================================
+
+        function createCourseCard(course, showAllActions = false) {
+            const statusClass = course.approval_status === 'Pending' ? 'status-pending' :
+                                course.approval_status === 'Approved' ? 'status-approved' : 'status-rejected';
+
+            let actions = `
+                <button class="btn btn-primary btn-sm" onclick="openCourseDetails(${course.course_id})">
+                    View Details
+                </button>
+            `;
+
+            if (course.approval_status === 'Pending') {
+                actions += `
+                    <button class="btn btn-success btn-sm" onclick="approveCourse(${course.course_id})">
+                        ✓ Approve
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="rejectCourse(${course.course_id})">
+                        ✗ Reject
+                    </button>
+                `;
+            }
+
+            return `
+                <div class="course-card">
+                    <div class="course-header">
+                        <h3>${course.course_name}</h3>
+                        <div class="course-category">${course.category}</div>
+                    </div>
+                    <div class="course-body">
+                        <div class="course-info">
+                            <label>Instructor:</label> ${course.instructor_name}
+                        </div>
+                        <div class="course-info">
+                            <label>Duration:</label> ${course.duration_in_weeks} weeks
+                        </div>
+                        <span class="course-status ${statusClass}">
+                            ${course.approval_status || 'Pending'}
+                        </span>
+                        <div class="course-actions">
+                            ${actions}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ============================================================
+        // COURSE DETAILS MODAL
+        // ============================================================
+
+        async function openCourseDetails(courseId) {
+            currentCourseId = courseId;
+            const token = getToken();
+            const modal = document.getElementById('courseModal');
+
+            try {
+                // Fetch course details
+                const detailsResponse = await fetch(`${API_URL}/admin/courses/${courseId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!detailsResponse.ok) {
+                    showError('Failed to load course details');
+                    return;
+                }
+
+                const courseData = await detailsResponse.json();
+
+                // Update modal header and basic info
+                document.getElementById('modalTitle').textContent = courseData.course_name;
+                document.getElementById('modalCategory').textContent = courseData.category;
+                document.getElementById('modalDuration').textContent = `${courseData.duration_in_weeks} weeks`;
+                document.getElementById('modalLevel').textContent = courseData.difficulty_level;
+                document.getElementById('modalLanguage').textContent = courseData.language;
+                document.getElementById('modalDescription').textContent = courseData.description;
+
+                // Fetch statistics
+                const statsResponse = await fetch(`${API_URL}/admin/courses/${courseId}/statistics`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (statsResponse.ok) {
+                    const stats = await statsResponse.json();
+                    console.log('Statistics Response:', stats);
+                    document.getElementById('statisticsSection').style.display = 'block';
+                    document.getElementById('statEnrolled').textContent = stats.enrolled_count || 0;
+                    document.getElementById('statCompleted').textContent = stats.completed_count || 0;
+                    document.getElementById('statInProgress').textContent = stats.in_progress_count || 0;
+                    document.getElementById('statCompletionRate').textContent = 
+                        (stats.completion_rate ? (stats.completion_rate * 100).toFixed(1) : '0') + '%';
+                    document.getElementById('statAvgRating').textContent = 
+                        stats.average_rating ? stats.average_rating.toFixed(2) : 'N/A';
+                } else {
+                    console.log('Statistics fetch failed:', statsResponse.status);
+                }
+
+                // Fetch ratings
+                const ratingsResponse = await fetch(`${API_URL}/admin/courses/${courseId}/ratings`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (ratingsResponse.ok) {
+                    const ratings = await ratingsResponse.json();
+                    console.log('Ratings Response:', ratings);
+                    if (ratings && ratings.length > 0) {
+                        document.getElementById('ratingsSection').style.display = 'block';
+                        const ratingsList = document.getElementById('ratingsList');
+                        ratingsList.innerHTML = ratings.map(rating => `
+                            <div class="rating-item">
+                                <div class="rating-header">
+                                    <span class="rating-student">${rating.student_name}</span>
+                                    <span class="rating-value">⭐ ${rating.rating}/5</span>
+                                </div>
+                                ${rating.is_review_public ? '<span class="rating-badge">Public</span>' : '<span class="rating-badge" style="background: #6c757d;">Private</span>'}
+                                <div class="rating-text">"${rating.review_text || 'No review text'}"</div>
+                            </div>
+                        `).join('');
+                    }
+                } else {
+                    console.log('Ratings fetch failed:', ratingsResponse.status);
+                }
+
+                // Fetch students enrolled in this course
+                const studentsResponse = await fetch(`${API_URL}/admin/courses/${courseId}/students`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (studentsResponse.ok) {
+                    const studentsData = await studentsResponse.json();
+                    console.log('Students Response:', studentsData);
+                    if (studentsData.students && studentsData.students.length > 0) {
+                        document.getElementById('studentsSection').style.display = 'block';
+                        const studentsList = document.getElementById('studentsList');
+                        studentsList.innerHTML = studentsData.students.map(student => `
+                            <div class="student-item" onclick="viewStudentProfile(${student.student_user_id})">
+                                <div class="student-name">${student.student_name}</div>
+                                <div class="student-info">Email: ${student.student_email}</div>
+                                <div class="student-info">Status: ${student.completion_status || 'Enrolled'}</div>
+                                ${student.rating ? `<div class="student-info">Rating: ⭐ ${student.rating}/5</div>` : ''}
+                            </div>
+                        `).join('');
+                    }
+                } else {
+                    console.log('Students fetch failed:', studentsResponse.status);
+                }
+
+                // Setup action buttons
+                setupModalActions(courseData.approval_status);
+
+                // Show modal
+                modal.classList.add('show');
+            } catch (error) {
+                console.error('Error loading course details:', error);
+                showError('Error loading course details');
+            }
+        }
+
+        function setupModalActions(status) {
+            const actionsDiv = document.getElementById('modalActions');
+            
+            if (status === 'Pending') {
+                actionsDiv.innerHTML = `
+                    <button class="btn btn-success" onclick="approveCourse(${currentCourseId})">
+                        ✓ Approve Course
+                    </button>
+                    <button class="btn btn-danger" onclick="rejectCourse(${currentCourseId})">
+                        ✗ Reject Course
+                    </button>
+                    <button class="btn btn-primary" onclick="closeModal()">Close</button>
+                `;
+            } else {
+                actionsDiv.innerHTML = `
+                    <button class="btn btn-primary" onclick="closeModal()">Close</button>
+                `;
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('courseModal').classList.remove('show');
+            currentCourseId = null;
+        }
+
+        // ============================================================
+        // APPROVE/REJECT ACTIONS
+        // ============================================================
+
+        async function approveCourse(courseId) {
+            if (!confirm('Are you sure you want to approve this course?')) return;
+
+            const token = getToken();
+
+            try {
+                const response = await fetch(`${API_URL}/admin/courses/${courseId}/approve`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    showSuccess('Course approved successfully!');
+                    closeModal();
+                    await loadPendingCourses();
+                } else {
+                    showError('Failed to approve course');
+                }
+            } catch (error) {
+                console.error('Error approving course:', error);
+                showError('Error approving course');
+            }
+        }
+
+        async function rejectCourse(courseId) {
+            const reason = prompt('Enter rejection reason (optional):');
+            if (reason === null) return;
+
+            const token = getToken();
+
+            try {
+                const response = await fetch(`${API_URL}/admin/courses/${courseId}/reject`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reason: reason || 'No reason provided' })
+                });
+
+                if (response.ok) {
+                    showSuccess('Course rejected successfully!');
+                    closeModal();
+                    await loadPendingCourses();
+                } else {
+                    showError('Failed to reject course');
+                }
+            } catch (error) {
+                console.error('Error rejecting course:', error);
+                showError('Error rejecting course');
+            }
+        }
+
+        // ============================================================
+        // VIEW STUDENT PROFILE
+        // ============================================================
+
+        function viewStudentProfile(studentUserId) {
+            // Store student ID and open profile page in new tab/window or navigate
+            localStorage.setItem('selectedStudentId', studentUserId);
+            localStorage.setItem('adminToken', getToken());
+            window.location.href = '/admin/student-profile';
+        }
+
+        // ============================================================
+        // INITIALIZE ON PAGE LOAD
+        // ============================================================
+
+        window.addEventListener('load', initDashboard);
+    </script>
+</body>
+</html>

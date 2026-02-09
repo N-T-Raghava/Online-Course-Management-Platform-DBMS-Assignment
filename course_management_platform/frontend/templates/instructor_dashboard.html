@@ -314,8 +314,13 @@
 <!-- Quick Actions -->
 {% if stats.total_courses_taught > 0 %}
 <div class="quick-actions">
+    <a href="{{ url_for('instructor_create_course') }}" class="action-btn">Create New Course</a>
     <a href="#courses-section" class="action-btn">View All Courses</a>
     <a href="{{ url_for('instructor_upload_content_base') }}" class="action-btn">Upload Content</a>
+</div>
+{% else %}
+<div class="quick-actions">
+    <a href="{{ url_for('instructor_create_course') }}" class="action-btn">Create Your First Course</a>
 </div>
 {% endif %}
 
@@ -408,6 +413,43 @@
             <h5>No Courses Assigned Yet</h5>
             <p>You are not currently assigned to teach any courses.</p>
             <p style="color: var(--text-muted); font-size: 14px;">Contact an administrator to get started.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Pending Courses Section (Waiting for Approval) -->
+<div class="courses-teaching-section" id="pending-courses-section">
+    <h3>📋 Courses Pending Approval</h3>
+    
+    {% if pending_courses and pending_courses|length > 0 %}
+        <div class="row g-4">
+            {% for course in pending_courses %}
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="course-card-instructor" style="border-left: 4px solid #F59E0B;">
+                    <div class="course-card-header" style="background: linear-gradient(135deg, #F59E0B, #D97706);">
+                        <h5>{{ course.title }}</h5>
+                        <div class="course-meta">
+                            <span class="course-badge" style="background: rgba(255, 255, 255, 0.3);">⏳ Pending</span>
+                            {% if course.category %}<span class="course-badge">{{ course.category }}</span>{% endif %}
+                        </div>
+                    </div>
+                    <div class="course-card-body">
+                        <p class="course-card-description">
+                            {{ course.description[:100] if course.description else 'No description' }}{% if course.description and course.description|length > 100 %}...{% endif %}
+                        </p>
+                        <div style="padding: 12px; background: #FEF3C7; border-radius: 4px; margin-bottom: 12px; font-size: 13px; color: #78350F;">
+                            <strong>Status:</strong> Waiting for admin approval
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state-instructor">
+            <h5>No Pending Courses</h5>
+            <p>All your courses have been processed or you haven't created any yet.</p>
+            <a href="{{ url_for('instructor_create_course') }}" style="color: #8B5CF6; text-decoration: none; font-weight: 600;">Create a new course →</a>
         </div>
     {% endif %}
 </div>

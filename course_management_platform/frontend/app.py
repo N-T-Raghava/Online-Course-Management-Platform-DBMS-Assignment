@@ -48,16 +48,35 @@ def login():
             session['admin_level'] = response.get('admin_level')  # Store admin level if present
             session.permanent = True
             
-            # Determine redirect based on user role
+            print(f"DEBUG login - Response admin_level: {response.get('admin_level')}, Role: {response.get('role')}")
+            print(f"DEBUG login - Session set with admin_level: {session.get('admin_level')}")
+            
+            # Determine redirect based on user role and admin level
             user_role = response.get('role', '').lower()
             if user_role == 'instructor':
                 redirect_url = '/instructor/dashboard'
             elif user_role == 'administrator':
-                redirect_url = '/dashboard'  # Admins see dashboard for now
+                # Check admin level
+                admin_level = (response.get('admin_level') or '').lower()
+                print(f"DEBUG login - Admin detected, admin_level: {admin_level}")
+                if admin_level == 'senior':
+                    redirect_url = '/admin/senior/dashboard'
+                    print(f"DEBUG login - Senior admin, redirecting to /admin/senior/dashboard")
+                else:
+                    redirect_url = '/admin/dashboard'
+                    print(f"DEBUG login - Junior admin, redirecting to /admin/dashboard")
             else:
                 redirect_url = '/dashboard'
             
-            return jsonify({'success': True, 'redirect': redirect_url}), 200
+            # Return token in response for client storage
+            return jsonify({
+                'success': True, 
+                'redirect': redirect_url,
+                'access_token': response.get('access_token'),
+                'user_id': response.get('user_id'),
+                'role': response.get('role'),
+                'admin_level': response.get('admin_level')
+            }), 200
         else:
             error_msg = response.get('error') or response.get('detail', 'Login failed')
             return jsonify({'error': error_msg}), 401
@@ -95,6 +114,15 @@ def dashboard():
     """Dashboard page - requires authentication"""
     if 'token' not in session:
         return redirect(url_for('login'))
+    
+    # Check if user is admin - redirect to admin dashboard
+    user_role = session.get('role', '').lower()
+    if user_role == 'administrator':
+        return redirect(url_for('admin_dashboard'))
+    
+    # Check if user is instructor - redirect to instructor dashboard
+    if user_role == 'instructor':
+        return redirect(url_for('instructor_dashboard'))
     
     token = session.get('token')
     user_id = session.get('user_id')
@@ -452,6 +480,11 @@ def instructor_dashboard():
     # Fetch courses taught by instructor
     courses_success, instructor_courses = InstructorService.get_instructor_courses(user_id, token)
     
+    # Fetch pending courses created by instructor
+    pending_success, pending_courses = CourseService.get_instructor_pending_courses(token)
+    if not pending_success:
+        pending_courses = []
+    
     stats = {
         'total_courses_taught': 0,
         'total_students': 0
@@ -496,11 +529,94 @@ def instructor_dashboard():
         user=user_context,
         stats=stats,
         instructor_courses=instructor_courses,
+        pending_courses=pending_courses,
         active_enrollments=active_enrollments,
         completion_rate=completion_rate,
         current_time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         course_stats_json=json.dumps(course_stats_data),
         completion_stats_json=json.dumps(completion_stats_data)
+    )
+
+
+@app.route('/instructor/create-course', methods=['GET', 'POST'])
+def instructor_create_course():
+    """Create a new course as an instructor"""
+    if 'token' not in session:
+        return redirect(url_for('login'))
+    
+    token = session.get('token')
+    user_id = session.get('user_id')
+    
+    # Fetch current instructor info
+    user_success, user_data = InstructorService.get_current_instructor(token)
+    
+    if not user_success:
+        flash('Failed to fetch user data. Please login again.', 'danger')
+        return redirect(url_for('login'))
+    
+    # Fetch universities for dropdown
+    uni_success, universities = CourseService.get_all_universities()
+    if not uni_success:
+        universities = []
+    
+    if request.method == 'POST':
+        data = request.get_json()
+        
+        # Validate required fields
+        if not data.get('title'):
+            return jsonify({'error': 'Course title is required'}), 400
+        
+        # Validate topics
+        topics = data.get('topics', [])
+        if not topics or len(topics) == 0:
+            return jsonify({'error': 'At least one topic is required'}), 400
+        
+        # Prepare course data - only pass fields that are present
+        course_data = {
+            'title': data.get('title'),
+            'topics': topics
+        }
+        
+        # Add optional fields only if they're present and not empty
+        if data.get('description'):
+            course_data['description'] = data['description']
+        if data.get('category'):
+            course_data['category'] = data['category']
+        if data.get('level'):
+            course_data['level'] = data['level']
+        if data.get('language'):
+            course_data['language'] = data['language']
+        if data.get('duration') is not None:
+            course_data['duration'] = data['duration']
+        if data.get('university_id') is not None:
+            course_data['university_id'] = data['university_id']
+        
+        # Log the data being sent (for debugging)
+        print(f"[DEBUG] Course data being sent to backend: {course_data}")
+        
+        # Create course via API
+        success, response = CourseService.create_instructor_course(course_data, token)
+        
+        if success:
+            flash(f'Course "{course_data["title"]}" created successfully! It is now pending approval.', 'success')
+            return jsonify({'success': True, 'message': 'Course created successfully', 'redirect': url_for('instructor_dashboard')}), 201
+        else:
+            # Extract error details from response
+            error_msg = response.get('error') or response.get('detail', 'Failed to create course')
+            if isinstance(error_msg, list):
+                error_msg = ', '.join([str(e) for e in error_msg])
+            print(f"[DEBUG] Backend error response: {response}")
+            return jsonify({'error': error_msg}), 400
+    
+    # GET request - show the form
+    user_context = {
+        'name': user_data.get('name', 'Instructor'),
+        'user_id': user_id
+    }
+    
+    return render_template('instructor_course_creation.html',
+        user=user_context,
+        universities=universities
     )
 
 
@@ -680,7 +796,7 @@ def api_upload_content():
 def logout():
     """Logout user"""
     session.clear()
-    return redirect(url_for('login'))
+    return render_template('logout.html')
 
 # ============================================================
 # ADMIN ROUTES (Requires Administrator role)
@@ -701,7 +817,34 @@ def check_senior_admin():
 
 @app.route('/admin/dashboard')
 def admin_dashboard():
-    """Main admin dashboard"""
+    """Main admin dashboard - Junior Admin OR redirect Senior to their dashboard"""
+    if not check_admin_role():
+        return redirect(url_for('login'))
+    
+    # Get token and decode to check admin_level
+    token = session.get('token')
+    admin_level_from_session = session.get('admin_level', '').lower()
+    
+    # Check both session and token for admin_level
+    # Prefer session if available, decode token as fallback
+    admin_level = admin_level_from_session or 'junior'
+    
+    print(f"DEBUG admin_dashboard - admin_level from session: {session.get('admin_level')}, admin_level_from_session: {admin_level_from_session}, final admin_level: {admin_level}")
+    
+    # Redirect senior admins to their dashboard
+    if admin_level == 'senior':
+        return redirect(url_for('senior_admin_dashboard'))
+    
+    # Get token from session and pass to template
+    user_id = session.get('user_id')
+    
+    # Just serve the template - all data loading is done client-side
+    return render_template('admin_dashboard.html', token=token, user_id=user_id, admin_level=admin_level)
+
+
+@app.route('/admin/student-profile')
+def admin_student_profile():
+    """Student profile view for admins"""
     if not check_admin_role():
         return redirect(url_for('login'))
     
@@ -709,43 +852,33 @@ def admin_dashboard():
     user_id = session.get('user_id')
     admin_level = session.get('admin_level', 'Junior')
     
-    # Fetch admin info
-    user_success, admin_data = AdminService.get_current_admin(token)
+    # Just serve the template - all data loading is done client-side
+    return render_template('student_profile.html', token=token, user_id=user_id, admin_level=admin_level)
+
+
+@app.route('/admin/senior/dashboard')
+def senior_admin_dashboard():
+    """Senior Admin Dashboard - with delete privileges"""
+    if not check_admin_role():
+        return redirect(url_for('login'))
     
-    if not user_success:
-        return render_template('admin_dashboard.html', 
-                             error='Failed to fetch admin info',
-                             admin_level=admin_level,
-                             user_id=user_id,
-                             admin_name='Admin')
+    # Get admin_level from session
+    admin_level = (session.get('admin_level') or '').lower()
     
-    # Fetch all courses and analytics
-    courses_success, courses = AdminService.get_all_courses(token)
+    print(f"DEBUG senior_admin_dashboard - admin_level from session: {session.get('admin_level')}, admin_level: {admin_level}")
     
-    # Calculate metrics
-    total_courses = len(courses) if courses_success else 0
-    total_enrollments = sum(c.get('total_enrollments', 0) for c in (courses or []))
+    # If not senior, redirect to junior dashboard
+    if admin_level != 'senior':
+        print(f"DEBUG senior_admin_dashboard - not senior, redirecting to admin_dashboard")
+        flash('Access denied. Senior Admin privileges required.', 'error')
+        return redirect(url_for('admin_dashboard'))
     
-    # Mock instructor count (would need actual API)
-    total_instructors = 0
-    completion_rate = 0
+    token = session.get('token')
+    user_id = session.get('user_id')
     
-    # Prepare chart data
-    course_labels = [c.get('title', '')[:20] for c in (courses or [])]
-    enrollment_data = [c.get('total_enrollments', 0) for c in (courses or [])]
-    completion_data = [65, 25, 10]  # Completed, In Progress, Not Started
-    
-    return render_template('admin_dashboard.html',
-                         admin_level=admin_level,
-                         admin_name=admin_data.get('name', 'Admin'),
-                         user_id=user_id,
-                         total_courses=total_courses,
-                         total_instructors=total_instructors,
-                         total_enrollments=total_enrollments,
-                         completion_rate=completion_rate,
-                         course_labels=course_labels,
-                         enrollment_data=enrollment_data,
-                         completion_data=completion_data)
+    # Just serve the template - all data loading is done client-side
+    return render_template('senior_admin_dashboard.html', token=token, user_id=user_id, admin_level=admin_level)
+
 
 @app.route('/admin/courses')
 def admin_courses():
