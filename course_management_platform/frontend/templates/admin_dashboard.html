@@ -813,7 +813,7 @@
                     document.getElementById('statCompleted').textContent = stats.completed_count || 0;
                     document.getElementById('statInProgress').textContent = stats.in_progress_count || 0;
                     document.getElementById('statCompletionRate').textContent = 
-                        (stats.completion_rate ? (stats.completion_rate * 100).toFixed(1) : '0') + '%';
+                        (stats.completion_rate ? Number(stats.completion_rate).toFixed(1) : '0') + '%';
                     document.getElementById('statAvgRating').textContent = 
                         stats.average_rating ? stats.average_rating.toFixed(2) : 'N/A';
                 } else {
