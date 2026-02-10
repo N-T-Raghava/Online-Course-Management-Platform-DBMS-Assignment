@@ -355,6 +355,142 @@ def update_topic_progress_service(
     )
 
 
+def rollback_topic_progress_service(
+    db: Session,
+    student_user_id: int,
+    course_id: int,
+    topic_id: int,
+    current_user: dict
+):
+    """
+    Rollback topic progression for a student (when unchecking a topic).
+    • Validates student is accessing their own data
+    • Validates course and topic exist
+    • Sets enrollment.current_topic to previous topic (or None if first topic)
+    • Returns updated enrollment
+    """
+
+    # --------------------------------------------------------
+    # SELF CHECK
+    # --------------------------------------------------------
+    if current_user["role"] == Role.STUDENT.value:
+        if current_user["user_id"] != student_user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Students can update only their progress"
+            )
+
+    # Validate user exists and is a student
+    user = user_repo.get_user_by_id(db, student_user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Student not found")
+    if user.role.lower() != "student":
+        raise HTTPException(status_code=400, detail="User is not a student")
+
+    # Validate course exists
+    course = course_repo.get_course_by_id(db, course_id)
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    # Validate topic exists
+    topic = course_repo.get_topic_by_id(db, topic_id)
+    if not topic:
+        raise HTTPException(status_code=404, detail="Topic not found")
+
+    # Get enrollment
+    enrollment = participation_repo.get_enrollment(db, student_user_id, course_id)
+    if not enrollment:
+        raise HTTPException(status_code=404, detail="Enrollment not found")
+
+    # Find previous topic
+    all_topics = course_repo.get_topics_by_course(db, course_id)
+    
+    # Filter out Final Assessment topic (already ordered by sequence_order from DB)
+    regular_topics = [t for t in all_topics if t.name != "Final Assessment"]
+
+    # Find index of current topic
+    current_index = next((i for i, t in enumerate(regular_topics) if t.topic_id == topic_id), None)
+    
+    if current_index is None:
+        raise HTTPException(status_code=400, detail="Topic not found in course")
+    
+    # Calculate previous topic_id
+    if current_index == 0:
+        # First topic - set to None
+        previous_topic_id = None
+    else:
+        # Go to previous topic
+        previous_topic_id = regular_topics[current_index - 1].topic_id
+
+    # Update current_topic to previous topic
+    return participation_repo.update_topic_progress(
+        db,
+        enrollment,
+        previous_topic_id
+    )
+
+
+def reset_progress_service(
+    db: Session,
+    student_user_id: int,
+    course_id: int,
+    current_user: dict
+):
+    """
+    Reset progress to first topic (when student fails quiz).
+    • Validates student is accessing their own data
+    • Validates course exists
+    • Sets enrollment.current_topic to first topic
+    • Returns updated enrollment
+    """
+
+    # --------------------------------------------------------
+    # SELF CHECK
+    # --------------------------------------------------------
+    if current_user["role"] == Role.STUDENT.value:
+        if current_user["user_id"] != student_user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Students can update only their progress"
+            )
+
+    # Validate user exists and is a student
+    user = user_repo.get_user_by_id(db, student_user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Student not found")
+    if user.role.lower() != "student":
+        raise HTTPException(status_code=400, detail="User is not a student")
+
+    # Validate course exists
+    course = course_repo.get_course_by_id(db, course_id)
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    # Get enrollment
+    enrollment = participation_repo.get_enrollment(db, student_user_id, course_id)
+    if not enrollment:
+        raise HTTPException(status_code=404, detail="Enrollment not found")
+
+    # Get all topics and find the first one
+    all_topics = course_repo.get_topics_by_course(db, course_id)
+    
+    # Filter out Final Assessment topic (already ordered by sequence_order from DB)
+    regular_topics = [t for t in all_topics if t.name != "Final Assessment"]
+
+    if not regular_topics:
+        raise HTTPException(status_code=400, detail="No regular topics found in course")
+    
+    # Get first topic
+    first_topic_id = regular_topics[0].topic_id
+
+    # Update current_topic to first topic
+    return participation_repo.update_topic_progress(
+        db,
+        enrollment,
+        first_topic_id
+    )
+
+
 def submit_assessment_service(
     db: Session,
     student_user_id: int,

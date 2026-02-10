@@ -30,6 +30,28 @@ class CourseService:
             return False, []
 
     @staticmethod
+    def get_all_categories() -> Tuple[bool, Any]:
+        """Fetch all distinct course categories"""
+        try:
+            resp = requests.get(f"{BACKEND_URL}/categories", timeout=10)
+            if resp.status_code == 200:
+                return True, resp.json()
+            return False, []
+        except requests.exceptions.RequestException:
+            return False, []
+
+    @staticmethod
+    def get_courses_by_category(category: str) -> Tuple[bool, Any]:
+        """Fetch all courses for a specific category"""
+        try:
+            resp = requests.get(f"{BACKEND_URL}/courses/category/{category}", timeout=10)
+            if resp.status_code == 200:
+                return True, resp.json()
+            return False, []
+        except requests.exceptions.RequestException:
+            return False, []
+
+    @staticmethod
     def get_course_by_id(course_id: int) -> Tuple[bool, Any]:
         try:
             resp = requests.get(f"{BACKEND_URL}/courses/{course_id}", timeout=10)

@@ -176,6 +176,11 @@ window.QuizAPI = new QuizAPI();
  */
 async function renderQuizQuestions(quizData, formElement) {
     try {
+        // Validate formElement
+        if (!formElement) {
+            throw new Error('Form element not found. Unable to render quiz questions.');
+        }
+
         // Clear existing questions
         const existingQuestions = formElement.querySelectorAll('.question-card');
         existingQuestions.forEach(el => el.remove());
@@ -265,7 +270,15 @@ async function renderQuizQuestions(quizData, formElement) {
         const errorDiv = document.createElement('div');
         errorDiv.className = 'alert alert-danger';
         errorDiv.textContent = 'Failed to load quiz questions: ' + (error.message || 'Unknown error');
-        formElement.appendChild(errorDiv);
+        
+        // Only append if formElement is valid
+        if (formElement) {
+            formElement.appendChild(errorDiv);
+        } else {
+            // If formElement is null, display error in console and alert
+            console.error('Cannot display quiz error: formElement is null');
+            alert('Error: Unable to render quiz. Please refresh the page.');
+        }
         throw error;
     }
 }
@@ -344,6 +357,13 @@ function gradeQuiz(studentAnswers, questions) {
  * @param {HTMLElement} resultArea - Element to display results
  */
 function displayQuizResults(gradingResult, resultArea) {
+    // Validate resultArea
+    if (!resultArea) {
+        console.error('Result area element is null');
+        alert('Error: Unable to display results. Please refresh the page.');
+        return;
+    }
+
     resultArea.innerHTML = '';
 
     // Score banner
@@ -421,6 +441,39 @@ function displayQuizResults(gradingResult, resultArea) {
         resultItem.innerHTML = reviewHTML;
         reviewDiv.appendChild(resultItem);
     });
+
+    // Append rating block if not present (some templates render static rating, others rely on JS)
+    if (!document.getElementById('stars')) {
+        const ratingBlock = document.createElement('div');
+        ratingBlock.innerHTML = `
+            <hr>
+            <h5>Rate & Review</h5>
+            <div>
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Your Rating:</label>
+                <div id="stars" style="display:flex; gap:8px; margin-bottom: 12px;">
+                    <span class="rating-star" data-value="1">☆</span>
+                    <span class="rating-star" data-value="2">☆</span>
+                    <span class="rating-star" data-value="3">☆</span>
+                    <span class="rating-star" data-value="4">☆</span>
+                    <span class="rating-star" data-value="5">☆</span>
+                </div>
+                <div id="rating-display" style="margin-bottom: 12px; font-weight: 500; color: #667eea;">No rating selected</div>
+                <label for="reviewText" style="display: block; margin-bottom: 8px; font-weight: 500;">Your Review (optional):</label>
+                <textarea id="reviewText" class="form-control" rows="3" placeholder="Share your thoughts about this course..."></textarea>
+                <div class="review-actions" style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+                    <label><input type="checkbox" id="isPublic"> Make review public</label>
+                    <button type="button" id="submitReviewBtn" class="btn btn-success">Submit Review</button>
+                </div>
+                <div id="reviewMsg" style="margin-top:8px;"></div>
+            </div>
+        `;
+        resultArea.appendChild(ratingBlock);
+    }
+
+    // If a page-defined setupRatingStars exists, call it to wire up the stars
+    if (typeof window.setupRatingStars === 'function') {
+        try { window.setupRatingStars(); } catch (e) { console.warn('setupRatingStars threw', e); }
+    }
 
     resultArea.appendChild(reviewDiv);
 }

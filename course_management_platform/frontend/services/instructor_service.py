@@ -103,7 +103,7 @@ class InstructorService:
         """Fetch topics for a course"""
         try:
             resp = requests.get(
-                f"{BACKEND_URL}/topics/courses/{course_id}/topics",
+                f"{BACKEND_URL}/courses/{course_id}/topics",
                 headers={'Authorization': f'Bearer {token}'},
                 timeout=10
             )
@@ -176,3 +176,56 @@ class InstructorService:
             return False, None
         except requests.exceptions.RequestException as e:
             return False, None
+    
+    @staticmethod
+    def update_course(course_id: int, payload: Dict[str, Any], token: str) -> Tuple[bool, Any]:
+        """Update course details"""
+        try:
+            resp = requests.put(
+                f"{BACKEND_URL}/courses/{course_id}",
+                json=payload,
+                headers={'Authorization': f'Bearer {token}'},
+                timeout=10
+            )
+            if resp.status_code == 200:
+                return True, resp.json()
+            else:
+                data = resp.json() if resp.text else {}
+                return False, data
+        except requests.exceptions.RequestException as e:
+            return False, {'error': str(e)}
+    
+    @staticmethod
+    def add_topic_to_course(course_id: int, payload: Dict[str, Any], token: str) -> Tuple[bool, Any]:
+        """Add a topic to a course"""
+        try:
+            resp = requests.post(
+                f"{BACKEND_URL}/courses/{course_id}/topics",
+                json=payload,
+                headers={'Authorization': f'Bearer {token}'},
+                timeout=10
+            )
+            if resp.status_code == 201 or resp.status_code == 200:
+                return True, resp.json()
+            else:
+                data = resp.json() if resp.text else {}
+                return False, data
+        except requests.exceptions.RequestException as e:
+            return False, {'error': str(e)}
+    
+    @staticmethod
+    def delete_topic_from_course(course_id: int, topic_id: int, token: str) -> Tuple[bool, Any]:
+        """Delete a topic from a course"""
+        try:
+            resp = requests.delete(
+                f"{BACKEND_URL}/courses/{course_id}/topics/{topic_id}",
+                headers={'Authorization': f'Bearer {token}'},
+                timeout=10
+            )
+            if resp.status_code == 200:
+                return True, resp.json()
+            else:
+                data = resp.json() if resp.text else {}
+                return False, data
+        except requests.exceptions.RequestException as e:
+            return False, {'error': str(e)}

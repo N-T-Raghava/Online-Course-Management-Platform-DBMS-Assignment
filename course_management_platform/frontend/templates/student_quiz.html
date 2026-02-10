@@ -63,6 +63,41 @@
             <!-- Answer Review -->
             <div id="answer-review" style="margin-bottom: 20px;"></div>
 
+            <!-- Rating & Review Section -->
+            <div id="rating-section" style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #f0f0f0;">
+                <h4>Rate & Review This Course</h4>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 500;">Your Rating:</label>
+                    <div id="rating-stars" style="display: flex; gap: 8px; font-size: 28px;">
+                        <span class="rating-star" data-value="1" style="cursor: pointer;">☆</span>
+                        <span class="rating-star" data-value="2" style="cursor: pointer;">☆</span>
+                        <span class="rating-star" data-value="3" style="cursor: pointer;">☆</span>
+                        <span class="rating-star" data-value="4" style="cursor: pointer;">☆</span>
+                        <span class="rating-star" data-value="5" style="cursor: pointer;">☆</span>
+                    </div>
+                    <div id="rating-display" style="margin-top: 8px; font-weight: 500; color: #667eea;">No rating selected</div>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="review-text" style="display: block; margin-bottom: 8px; font-weight: 500;">Your Review (optional):</label>
+                    <textarea id="review-text" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; font-size: 14px;" rows="4" placeholder="Share your thoughts about this course..."></textarea>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="make-public" style="cursor: pointer;">
+                        <span>Make this review public</span>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" id="submit-review-btn" onclick="submitRating()" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">
+                        Submit Review
+                    </button>
+                    <div id="rating-message" style="display: flex; align-items: center; font-size: 14px;"></div>
+                </div>
+            </div>
+
             <!-- Action Buttons -->
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button type="button" class="btn btn-primary" onclick="retakeQuiz()" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">
@@ -164,12 +199,21 @@
         color: #10b981;
         font-weight: 500;
     }
-</style>
+
+    .rating-star {
+        transition: color 0.2s ease, transform 0.2s ease;
+    }
+
+    .rating-star:hover, .rating-star.filled {
+        color: #ffc107;
+        transform: scale(1.2);
+    }</style>
 
 <script>
     let currentQuiz = null;
     let currentCourseId = null;
     let studentAnswers = {};
+    let selectedRating = 0;
 
     /**
      * Load and display quiz for a course
@@ -330,6 +374,9 @@
         const score = Math.round((correctCount / totalQuestions) * 100);
         const passed = score >= currentQuiz.passing_score;
 
+        // Store last quiz result for redirect logic after rating
+        window.lastQuizResult = { passed: passed, courseId: currentCourseId, score: score };
+
         // Display results
         displayResults(correctCount, totalQuestions, score, passed);
     }
@@ -372,10 +419,124 @@
             `;
             reviewDiv.appendChild(resultItem);
         });
+
+        // Initialize rating stars
+        // Ensure rating section is visible and initialized
+        const ratingSection = document.getElementById('rating-section');
+        if (ratingSection) {
+            ratingSection.style.display = 'block';
+            // initialize stars after making visible
+            initializeRatingStars();
+            // Scroll rating into view so user sees it immediately
+            ratingSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+            initializeRatingStars();
+        }
+    }
+
+    function initializeRatingStars() {
+        selectedRating = 0;
+        const stars = document.querySelectorAll('.rating-star');
+        
+        stars.forEach(star => {
+            star.classList.remove('filled');
+            star.addEventListener('click', function() {
+                selectedRating = parseInt(this.dataset.value);
+                updateStarDisplay();
+            });
+            
+            star.addEventListener('mouseover', function() {
+                const value = parseInt(this.dataset.value);
+                stars.forEach((s, index) => {
+                    if (index < value) {
+                        s.style.color = '#ffc107';
+                    } else {
+                        s.style.color = '#ddd';
+                    }
+                });
+            });
+        });
+        
+        document.getElementById('rating-stars').addEventListener('mouseout', updateStarDisplay);
+    }
+
+    function updateStarDisplay() {
+        const stars = document.querySelectorAll('.rating-star');
+        stars.forEach((star, index) => {
+            if (index < selectedRating) {
+                star.textContent = '★';
+                star.classList.add('filled');
+                star.style.color = '#ffc107';
+            } else {
+                star.textContent = '☆';
+                star.classList.remove('filled');
+                star.style.color = '#ddd';
+            }
+        });
+        
+        if (selectedRating > 0) {
+            document.getElementById('rating-display').textContent = `${selectedRating} star${selectedRating > 1 ? 's' : ''} selected`;
+        } else {
+            document.getElementById('rating-display').textContent = 'No rating selected';
+        }
+    }
+
+    async function submitRating() {
+        if (selectedRating === 0) {
+            alert('Please select a rating');
+            return;
+        }
+
+        const reviewText = document.getElementById('review-text').value.trim();
+        const isPublic = document.getElementById('make-public').checked;
+
+        const submitBtn = document.getElementById('submit-review-btn');
+        const messageDiv = document.getElementById('rating-message');
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+        messageDiv.innerHTML = '';
+
+        try {
+            const response = await fetch(`/api/progress/rate/${currentCourseId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    rating: selectedRating,
+                    review_text: reviewText,
+                    is_public: isPublic
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                messageDiv.innerHTML = '<span style="color: #10b981; font-weight: 500;">✓ Review submitted successfully!</span>';
+                // Redirect after 2 seconds based on quiz result
+                const qr = window.lastQuizResult || {};
+                const redirectUrl = qr.passed ? '/dashboard' : `/course/${qr.courseId}/learn`;
+                setTimeout(() => {
+                    window.location.href = redirectUrl;
+                }, 2000);
+            } else {
+                messageDiv.innerHTML = `<span style="color: #ef4444;">✗ Error: ${data.error || 'Failed to submit review'}</span>`;
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Review';
+            }
+        } catch (error) {
+            console.error('Error submitting rating:', error);
+            messageDiv.innerHTML = '<span style="color: #ef4444;">✗ Error submitting review. Please try again.</span>';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Review';
+        }
     }
 
     function retakeQuiz() {
         studentAnswers = {};
+        selectedRating = 0;
         document.getElementById('quiz-results').style.display = 'none';
         document.getElementById('quiz-form').style.display = 'block';
         resetQuiz();

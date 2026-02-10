@@ -106,6 +106,36 @@ class ProgressService:
             return False, str(e)
 
     @staticmethod
+    def rollback_progress(
+        student_user_id: int,
+        course_id: int,
+        topic_id: int,
+        token: str = None
+    ) -> Tuple[bool, Any]:
+        """
+        Rollback progress to a previous topic (when unchecking).
+        Updates: enrollment.current_topic = topic_id (or previous topic)
+        Returns: (success: bool, updated_enrollment: dict or error message)
+        """
+        try:
+            headers = {}
+            if token:
+                headers['Authorization'] = f'Bearer {token}'
+            
+            resp = requests.put(
+                f"{BACKEND_URL}/enrollments/rollback/{student_user_id}/{course_id}/{topic_id}",
+                headers=headers,
+                timeout=10
+            )
+            if resp.status_code == 200:
+                result = resp.json()
+                return True, result
+            error_msg = resp.json() if resp.text else "Failed to rollback progress"
+            return False, error_msg
+        except requests.exceptions.RequestException as e:
+            return False, str(e)
+
+    @staticmethod
     def submit_assessment(
         student_user_id: int,
         course_id: int,
@@ -211,6 +241,32 @@ class ProgressService:
             if resp.status_code == 200:
                 return True, resp.json()
             return False, resp.json() if resp.text else "Failed to submit rating"
+        except requests.exceptions.RequestException as e:
+            return False, str(e)
+
+    @staticmethod
+    def reset_progress(
+        student_user_id: int,
+        course_id: int,
+        token: str = None
+    ) -> Tuple[bool, Any]:
+        """
+        Reset progress to first topic (when student fails quiz).
+        Returns: (success: bool, result: dict or error message)
+        """
+        try:
+            headers = {}
+            if token:
+                headers['Authorization'] = f'Bearer {token}'
+
+            resp = requests.put(
+                f"{BACKEND_URL}/enrollments/reset/{student_user_id}/{course_id}",
+                headers=headers,
+                timeout=10
+            )
+            if resp.status_code == 200:
+                return True, resp.json()
+            return False, resp.json() if resp.text else "Failed to reset progress"
         except requests.exceptions.RequestException as e:
             return False, str(e)
 

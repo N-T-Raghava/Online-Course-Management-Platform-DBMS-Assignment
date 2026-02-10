@@ -219,7 +219,8 @@ def get_courses_by_instructor(
             'role_in_course': teaching.role_in_course,
             'assigned_date': teaching.assigned_date,
             'enrollment_count': enrollment_count,
-            'completion_count': completion_count
+            'completion_count': completion_count,
+            'approval_status': course.approval_status
         })
     
     return result

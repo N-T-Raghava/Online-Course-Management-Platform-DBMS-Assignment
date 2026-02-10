@@ -199,6 +199,45 @@
         to { transform: rotate(360deg); }
     }
 
+    .label-with-badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .required-badge {
+        background: #EF4444;
+        color: white;
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-weight: 600;
+    }
+
+    .optional-badge {
+        background: #9CA3AF;
+        color: white;
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-weight: 600;
+    }
+
+    .topics-loading {
+        display: none;
+    }
+
+    .topics-loading.show {
+        display: inline-block;
+        margin-left: 8px;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(139, 92, 246, 0.3);
+        border-radius: 50%;
+        border-top-color: #8B5CF6;
+        animation: spin 0.8s linear infinite;
+    }
+
     @media (max-width: 600px) {
         .upload-container {
             margin: 20px 0;
@@ -230,28 +269,24 @@
         <div class="upload-body">
             {% if course_id %}
             <div class="course-selector">
-                <h6>Selected Course</h6>
+                <h6>Pre-selected Course</h6>
                 <p>{{ selected_course_title or 'Loading...' }}</p>
-            </div>
-            {% else %}
-            <div style="background: #FEE2E2; padding: 15px; border-radius: 4px; margin-bottom: 20px; border-left: 4px solid #DC2626;">
-                <p style="margin: 0; color: #DC2626; font-weight: 600;">⚠️ No course selected</p>
-                <p style="margin: 5px 0 0 0; font-size: 13px; color: #991B1B;">Please select a course from your dashboard first.</p>
-                <a href="{{ url_for('instructor_dashboard') }}" style="color: #059669; text-decoration: underline; font-size: 13px; margin-top: 10px; display: inline-block;">Return to Dashboard</a>
             </div>
             {% endif %}
 
             <div id="error-message" class="error-message"></div>
             <div id="success-message" class="success-message"></div>
 
-            <div class="required-fields">
-                <strong>* Required fields</strong>
-            </div>
-
             <form id="upload-form" onsubmit="handleUploadForm(event)">
+                <!-- Course Selection -->
                 <div class="form-group">
-                    <label for="course-select">Select Course *</label>
-                    <select id="course-select" required>
+                    <label for="course-select">
+                        <div class="label-with-badge">
+                            <span>Select Course</span>
+                            <span class="required-badge">REQUIRED</span>
+                        </div>
+                    </label>
+                    <select id="course-select" required onchange="handleCourseChange(this.value)">
                         <option value="">-- Choose a course --</option>
                         {% for course in instructor_courses %}
                         <option value="{{ course.course_id }}" {% if course.course_id == course_id %}selected{% endif %}>
@@ -262,14 +297,14 @@
                     <p class="form-help">Select which course this content belongs to</p>
                 </div>
 
+                <!-- Content Type -->
                 <div class="form-group">
-                    <label for="content-title">Content Title *</label>
-                    <input type="text" id="content-title" required placeholder="e.g., Introduction to Python Basics">
-                    <p class="form-help">Give your content a clear, descriptive title</p>
-                </div>
-
-                <div class="form-group">
-                    <label for="content-type">Content Type *</label>
+                    <label for="content-type">
+                        <div class="label-with-badge">
+                            <span>Content Type</span>
+                            <span class="required-badge">REQUIRED</span>
+                        </div>
+                    </label>
                     <select id="content-type" required>
                         <option value="">-- Select type --</option>
                         <option value="Video">📹 Video Lecture</option>
@@ -280,28 +315,56 @@
                         <option value="Resource">📊 Resource / Dataset</option>
                         <option value="Other">📎 Other</option>
                     </select>
-                    <p class="form-help">Choose the type of content</p>
+                    <p class="form-help">Choose the type of content you're uploading</p>
                 </div>
 
+                <!-- Content Title -->
                 <div class="form-group">
-                    <label for="file-url">File URL / Link *</label>
+                    <label for="content-title">
+                        <div class="label-with-badge">
+                            <span>Content Title</span>
+                            <span class="required-badge">REQUIRED</span>
+                        </div>
+                    </label>
+                    <input type="text" id="content-title" required placeholder="e.g., Introduction to Python Basics">
+                    <p class="form-help">Give your content a clear, descriptive title</p>
+                </div>
+
+                <!-- File URL -->
+                <div class="form-group">
+                    <label for="file-url">
+                        <div class="label-with-badge">
+                            <span>File URL / Link</span>
+                            <span class="required-badge">REQUIRED</span>
+                        </div>
+                    </label>
                     <input type="url" id="file-url" required placeholder="https://example.com/path/to/file.pdf">
                     <p class="form-help">Provide the full URL where your content is hosted</p>
                 </div>
 
+                <!-- Topic -->
                 <div class="form-group">
-                    <label for="topic-select">Topic (Optional)</label>
+                    <label for="topic-select">
+                        <div class="label-with-badge">
+                            <span>Topic</span>
+                            <span class="optional-badge">OPTIONAL</span>
+                            <span id="topic-loading" class="topics-loading"></span>
+                        </div>
+                    </label>
                     <select id="topic-select">
-                        <option value="">-- No specific topic --</option>
-                        {% for topic in course_topics %}
-                        <option value="{{ topic.topic_id }}">{{ topic.name }}</option>
-                        {% endfor %}
+                        <option value="">-- No specific topic (course-wide content) --</option>
                     </select>
-                    <p class="form-help">Link this content to a specific course topic</p>
+                    <p class="form-help">Link this content to a specific course topic. Leave empty for course-wide content.</p>
                 </div>
 
+                <!-- Description -->
                 <div class="form-group">
-                    <label for="description">Description (Optional)</label>
+                    <label for="description">
+                        <div class="label-with-badge">
+                            <span>Description</span>
+                            <span class="optional-badge">OPTIONAL</span>
+                        </div>
+                    </label>
                     <textarea id="description" rows="4" placeholder="Describe what this content covers and what students should learn..."></textarea>
                     <p class="form-help">Help students understand the content scope and objectives</p>
                 </div>
@@ -320,19 +383,71 @@
 
 {% block extra_js %}
 <script>
+    // Handle course selection change to fetch topics
+    async function handleCourseChange(courseId) {
+        const topicSelect = document.getElementById('topic-select');
+        const topicLoading = document.getElementById('topic-loading');
+        
+        if (!courseId) {
+            // Clear topics if no course selected
+            topicSelect.innerHTML = '<option value="">-- No specific topic (course-wide content) --</option>';
+            return;
+        }
+
+        // Show loading indicator
+        topicLoading.classList.add('show');
+
+        try {
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            const response = await fetch(`/api/courses/${courseId}/topics`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : ''
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const topics = data.topics || data.data || [];
+                
+                // Rebuild topic select
+                let html = '<option value="">-- No specific topic (course-wide content) --</option>';
+                
+                if (topics.length > 0) {
+                    topics.forEach(topic => {
+                        const topicId = topic.topic_id || topic.id;
+                        const topicName = topic.name || topic.title;
+                        html += `<option value="${topicId}">${topicName}</option>`;
+                    });
+                }
+                
+                topicSelect.innerHTML = html;
+            } else {
+                console.error('Failed to fetch topics:', response.status);
+                topicSelect.innerHTML = '<option value="">-- Unable to load topics --</option>';
+            }
+        } catch (error) {
+            console.error('Error fetching topics:', error);
+            topicSelect.innerHTML = '<option value="">-- No specific topic (course-wide content) --</option>';
+        } finally {
+            // Hide loading indicator
+            topicLoading.classList.remove('show');
+        }
+    }
+
     // Handle form submission
     async function handleUploadForm(event) {
         event.preventDefault();
 
         const courseId = document.getElementById('course-select').value;
-        const title = document.getElementById('content-title').value;
         const contentType = document.getElementById('content-type').value;
+        const title = document.getElementById('content-title').value;
         const fileUrl = document.getElementById('file-url').value;
         const topicId = document.getElementById('topic-select').value;
         const description = document.getElementById('description').value;
 
-        // Validate
-        if (!courseId || !title || !contentType || !fileUrl) {
+        // Validate required fields
+        if (!courseId || !contentType || !title || !fileUrl) {
             showError('Please fill in all required fields');
             return;
         }
@@ -368,7 +483,7 @@
             const data = await response.json();
 
             if (response.ok || data.success) {
-                showSuccess('Content uploaded successfully!');
+                showSuccess('✓ Content uploaded successfully!');
                 setTimeout(() => {
                     window.location.href = '{{ url_for("instructor_course_detail", course_id=0) }}'.replace('/0', `/${courseId}`);
                 }, 1500);
@@ -409,11 +524,12 @@
         document.getElementById('error-message').style.display = 'none';
     }
 
-    // Load instructor courses on page load
+    // Load topics if a course is pre-selected
     window.addEventListener('DOMContentLoaded', function() {
         const courseSelect = document.getElementById('course-select');
-        if (courseSelect && courseSelect.options.length === 1) {
-            // Will be pre-populated by Flask template
+        if (courseSelect.value) {
+            // Course is pre-selected, load its topics
+            handleCourseChange(courseSelect.value);
         }
     });
 </script>

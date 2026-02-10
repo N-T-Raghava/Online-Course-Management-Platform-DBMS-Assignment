@@ -101,6 +101,28 @@
             <small id="answer-key-status" style="color: #666; margin-top: 5px;"></small>
         </div>
     </div>
+    
+    <!-- Rating prompt (shown after student completes quiz) -->
+    <div id="quiz-rating" style="margin-top:20px; display: none; padding: 15px; background-color: #fff; border-radius:4px;">
+        <h6>Rate & Review This Course</h6>
+        <div style="margin-bottom:8px;">
+            <label style="display:block; margin-bottom:6px; font-weight:500;">Your Rating:</label>
+            <div id="quiz-stars" style="display:flex; gap:8px; margin-bottom:8px;">
+                <span class="rating-star" data-value="1">☆</span>
+                <span class="rating-star" data-value="2">☆</span>
+                <span class="rating-star" data-value="3">☆</span>
+                <span class="rating-star" data-value="4">☆</span>
+                <span class="rating-star" data-value="5">☆</span>
+            </div>
+            <div id="quiz-rating-display" style="margin-bottom:8px; font-weight:500; color:#667eea;">No rating selected</div>
+            <textarea id="quiz-review-text" class="form-control" rows="3" placeholder="Optional review..."></textarea>
+            <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+                <label><input type="checkbox" id="quiz-is-public"> Make review public</label>
+                <button type="button" id="quiz-submit-review" class="btn btn-success">Submit Review</button>
+            </div>
+            <div id="quiz-review-msg" style="margin-top:8px;"></div>
+        </div>
+    </div>
 </div>
 
 <!-- Quiz Section Styles -->
@@ -271,4 +293,84 @@ function escapeHtml(text) {
 }
 
 document.getElementById('answer-key').addEventListener('input', updateAnswerKeyStatus);
+</script>
+<script>
+// Rating setup for quiz section (call window.showQuizSectionRating() after student completes quiz)
+function setupQuizSectionRating() {
+    const starsContainer = document.getElementById('quiz-stars');
+    if (!starsContainer) return;
+    const starNodes = Array.from(starsContainer.querySelectorAll('.rating-star'));
+    const ratingDisplay = document.getElementById('quiz-rating-display');
+    let selected = 0;
+
+    starNodes.forEach((star, idx) => {
+        star.addEventListener('mouseover', () => {
+            starNodes.forEach((s, i) => s.style.color = i <= idx ? '#ffc107' : '#ddd');
+        });
+        star.addEventListener('click', () => {
+            selected = parseInt(star.getAttribute('data-value')) || 0;
+            starNodes.forEach((s, i) => s.textContent = i < selected ? '★' : '☆');
+            if (ratingDisplay) ratingDisplay.textContent = `${selected} star${selected > 1 ? 's' : ''} selected`;
+        });
+    });
+
+    starsContainer.addEventListener('mouseout', () => {
+        starNodes.forEach((s, i) => s.style.color = i < selected ? '#ffc107' : '#ddd');
+        if (ratingDisplay && selected === 0) ratingDisplay.textContent = 'No rating selected';
+    });
+
+    const submitBtn = document.getElementById('quiz-submit-review');
+    if (!submitBtn) return;
+    submitBtn.addEventListener('click', async () => {
+        const reviewMsg = document.getElementById('quiz-review-msg');
+        if (selected <= 0) {
+            if (reviewMsg) reviewMsg.innerHTML = '<span style="color:#dc3545;">Please select a rating</span>';
+            return;
+        }
+        const reviewText = document.getElementById('quiz-review-text')?.value || '';
+        const isPublic = !!document.getElementById('quiz-is-public')?.checked;
+        // Determine course id
+        const cid = window.courseId || document.getElementById('quiz-section')?.dataset.courseId;
+        if (!cid) {
+            if (reviewMsg) reviewMsg.innerHTML = '<span style="color:#dc3545;">Course id unknown. Cannot submit review.</span>';
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
+
+        try {
+            const resp = await fetch(`/api/progress/rate/${cid}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ rating: selected, review_text: reviewText, is_public: isPublic })
+            });
+            if (resp.ok) {
+                if (reviewMsg) reviewMsg.innerHTML = '<span style="color:#28a745;">Thank you — review submitted.</span>';
+                // Redirect based on lastQuizResult if available
+                const qr = window.lastQuizResult || {};
+                const redirect = qr.passed ? '/dashboard' : (qr.courseId ? `/course/${qr.courseId}/learn` : `/`);
+                setTimeout(() => window.location.href = redirect, 1200);
+            } else {
+                const err = await resp.json().catch(() => ({}));
+                if (reviewMsg) reviewMsg.innerHTML = `<span style="color:#dc3545;">Failed: ${err.error || resp.statusText}</span>`;
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Review';
+            }
+        } catch (e) {
+            if (reviewMsg) reviewMsg.innerHTML = '<span style="color:#dc3545;">Network error submitting review.</span>';
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit Review';
+        }
+    });
+}
+
+// Expose helper to show rating UI after quiz completion
+window.showQuizSectionRating = function() {
+    const ratingBlock = document.getElementById('quiz-rating');
+    if (!ratingBlock) return;
+    ratingBlock.style.display = 'block';
+    setupQuizSectionRating();
+};
 </script>

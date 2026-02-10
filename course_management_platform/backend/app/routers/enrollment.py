@@ -18,6 +18,8 @@ from app.services.participation_service import (
     get_public_reviews_by_course_service,
     get_student_enrollments_service,
     update_topic_progress_service,
+    rollback_topic_progress_service,
+    reset_progress_service,
     submit_assessment_service
 )
 
@@ -114,6 +116,40 @@ def update_topic_progress(
         topic_id,
         current_user
     )
+
+# ROLLBACK TOPIC PROGRESS (when unchecking a topic)
+@router.put("/rollback/{student_user_id}/{course_id}/{topic_id}")
+def rollback_topic_progress(
+    student_user_id: int,
+    course_id: int,
+    topic_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    return rollback_topic_progress_service(
+        db,
+        student_user_id,
+        course_id,
+        topic_id,
+        current_user
+    )
+
+
+# RESET PROGRESS TO FIRST TOPIC (when quiz is failed)
+@router.put("/reset/{student_user_id}/{course_id}")
+def reset_progress(
+    student_user_id: int,
+    course_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    return reset_progress_service(
+        db,
+        student_user_id,
+        course_id,
+        current_user
+    )
+
 
 # SUBMIT ASSESSMENT
 # Accepts either precomputed score (0-100%) OR answers array

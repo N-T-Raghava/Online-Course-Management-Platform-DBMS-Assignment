@@ -30,7 +30,12 @@ def index():
     if not success:
         courses = []
 
-    return render_template('home.html', courses=courses)
+    # Fetch categories for filtering
+    cat_success, categories = CourseService.get_all_categories()
+    if not cat_success:
+        categories = []
+
+    return render_template('home.html', courses=courses, categories=categories)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -320,14 +325,26 @@ def course_learn(course_id: int):
     if not success or not course:
         return render_template('404.html'), 404
     
-    # Fetch course topics (same as course_detail)
+    # Fetch course topics
     topics_success, topics = CourseService.get_topics_by_course(course_id)
+    
+    # Fetch course content
+    content_success, course_content = InstructorService.get_course_content(course_id, token)
+    
+    if not content_success:
+        course_content = []
     
     user_context = {
         'user_id': user_id
     }
     
-    return render_template('course_learn.html', course=course, topics=topics if topics_success else [], current_user=user_context, auth_token=token)
+    return render_template('course_learn.html', 
+        course=course, 
+        topics=topics if topics_success else [], 
+        course_content=course_content,
+        current_user=user_context, 
+        auth_token=token
+    )
 
 
 @app.route('/course/<int:course_id>/assessment')
@@ -475,6 +492,40 @@ def api_update_progress(course_id: int, topic_id: int):
         return jsonify(result), 200
     else:
         return jsonify({'error': result or 'Failed to update progress'}), 400
+
+
+@app.route('/api/progress/rollback/<int:course_id>/<int:topic_id>', methods=['PUT'])
+def api_rollback_progress(course_id: int, topic_id: int):
+    """Rollback topic progress for current user (when unchecking)"""
+    if 'token' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    token = session.get('token')
+    user_id = session.get('user_id')
+    
+    success, result = ProgressService.rollback_progress(user_id, course_id, topic_id, token)
+    
+    if success:
+        return jsonify(result), 200
+    else:
+        return jsonify({'error': result or 'Failed to rollback progress'}), 400
+
+
+@app.route('/api/progress/reset/<int:course_id>', methods=['PUT'])
+def api_reset_progress(course_id: int):
+    """Reset progress to first topic for current user (when quiz is failed)"""
+    if 'token' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    token = session.get('token')
+    user_id = session.get('user_id')
+    
+    success, result = ProgressService.reset_progress(user_id, course_id, token)
+    
+    if success:
+        return jsonify(result), 200
+    else:
+        return jsonify({'error': result or 'Failed to reset progress'}), 400
 
 
 @app.route('/api/progress/submit/<int:course_id>', methods=['POST'])
@@ -630,15 +681,13 @@ def instructor_create_course():
         if not data.get('title'):
             return jsonify({'error': 'Course title is required'}), 400
         
-        # Validate topics
+        # Topics are now optional - can be added later during course editing
         topics = data.get('topics', [])
-        if not topics or len(topics) == 0:
-            return jsonify({'error': 'At least one topic is required'}), 400
         
         # Prepare course data - only pass fields that are present
         course_data = {
             'title': data.get('title'),
-            'topics': topics
+            'topics': topics  # Empty list is acceptable
         }
         
         # Add optional fields only if they're present and not empty
@@ -667,8 +716,9 @@ def instructor_create_course():
         success, response = CourseService.create_instructor_course(course_data, token)
         
         if success:
+            course_id = response.get('course_id') or response.get('id')
             flash(f'Course "{course_data["title"]}" created successfully! It is now pending approval.', 'success')
-            return jsonify({'success': True, 'message': 'Course created successfully', 'redirect': url_for('instructor_dashboard')}), 201
+            return jsonify({'success': True, 'message': 'Course created successfully', 'course_id': course_id, 'redirect': url_for('instructor_dashboard')}), 201
         else:
             # Extract error details from response
             error_msg = response.get('error') or response.get('detail', 'Failed to create course')
@@ -789,17 +839,25 @@ def instructor_upload_content(course_id):
         instructor_courses = []
     
     selected_course_title = None
+    course_topics = []
+    
+    # Fetch topics for the selected course
     if course_id and instructor_courses:
         for course in instructor_courses:
             if course.get('course_id') == course_id:
                 selected_course_title = course.get('course_title')
                 break
+        
+        # Fetch topics for the selected course
+        topics_success, topics = InstructorService.get_course_topics(course_id, token)
+        if topics_success and topics:
+            course_topics = topics if isinstance(topics, list) else topics.get('topics', [])
     
     return render_template('upload_content.html',
         instructor_courses=instructor_courses,
         course_id=course_id,
         selected_course_title=selected_course_title,
-        course_topics=[],
+        course_topics=course_topics,
         user={'user_id': user_id}
     )
 
@@ -859,6 +917,141 @@ def api_upload_content():
     else:
         error_msg = response.get('error') or response.get('detail') or 'Upload failed'
         return jsonify({'success': False, 'error': error_msg}), 400
+
+
+@app.route('/api/courses/<int:course_id>/topics', methods=['GET'])
+def api_get_course_topics(course_id):
+    """API endpoint for fetching topics of a course"""
+    if 'token' not in session:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    
+    token = session.get('token')
+    
+    # Fetch topics for the course
+    success, topics = InstructorService.get_course_topics(course_id, token)
+    
+    if success and topics:
+        # Handle different response formats
+        if isinstance(topics, list):
+            return jsonify({'success': True, 'topics': topics}), 200
+        elif isinstance(topics, dict) and 'topics' in topics:
+            return jsonify({'success': True, 'topics': topics['topics']}), 200
+        else:
+            return jsonify({'success': True, 'topics': topics}), 200
+    else:
+        # Return empty list if no topics found
+        return jsonify({'success': True, 'topics': []}), 200
+
+
+@app.route('/instructor/course/<int:course_id>/edit', methods=['GET', 'POST'])
+def instructor_edit_course(course_id: int):
+    """Edit an approved course"""
+    if 'token' not in session:
+        return redirect(url_for('login'))
+    
+    token = session.get('token')
+    user_id = session.get('user_id')
+    
+    # Fetch course details
+    course_success, course = CourseService.get_course_by_id(course_id)
+    if not course_success or not course:
+        flash('Course not found', 'warning')
+        return redirect(url_for('instructor_dashboard'))
+    
+    # Check if course is approved and belongs to instructor
+    if course.get('approval_status') != 'Approved':
+        flash('Only approved courses can be edited', 'warning')
+        return redirect(url_for('instructor_dashboard'))
+    
+    # Fetch course topics
+    topics_success, topics = CourseService.get_topics_by_course(course_id)
+    
+    # Fetch course content
+    content_success, course_content = InstructorService.get_course_content(course_id, token)
+    
+    # Fetch universities for dropdown
+    uni_success, universities = CourseService.get_all_universities()
+    
+    if request.method == 'POST':
+        data = request.get_json()
+        
+        # Validate required fields
+        if not data.get('title'):
+            return jsonify({'error': 'Course title is required'}), 400
+        
+        # Prepare update data
+        update_data = {
+            'title': data.get('title'),
+            'description': data.get('description'),
+            'category': data.get('category'),
+            'level': data.get('level'),
+            'language': data.get('language'),
+            'duration': data.get('duration'),
+            'university_id': data.get('university_id')
+        }
+        
+        # Call backend service to update course
+        success, result = InstructorService.update_course(course_id, update_data, token)
+        
+        if success:
+            return jsonify({'success': True, 'message': 'Course updated successfully'}), 200
+        else:
+            error_msg = result.get('error', 'Failed to update course') if isinstance(result, dict) else 'Failed to update course'
+            return jsonify({'error': error_msg}), 500
+    
+    return render_template('instructor_edit_course.html',
+        course=course,
+        topics=topics if topics_success else [],
+        course_content=course_content if content_success else [],
+        universities=universities if uni_success else [],
+        current_user={'user_id': user_id},
+        auth_token=token
+    )
+
+
+@app.route('/api/course/<int:course_id>/topic', methods=['POST', 'DELETE'])
+def api_manage_topic(course_id: int):
+    """Add or delete a topic from a course"""
+    if 'token' not in session:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    
+    token = session.get('token')
+    data = request.get_json()
+    
+    if request.method == 'POST':
+        # Add topic
+        if not data.get('name'):
+            return jsonify({'error': 'Topic name is required'}), 400
+        
+        # Prepare topic data
+        topic_data = {
+            'name': data.get('name'),
+            'description': data.get('description', '')
+        }
+        
+        # Call backend to add topic to course
+        success, result = InstructorService.add_topic_to_course(course_id, topic_data, token)
+        
+        if success:
+            return jsonify({'success': True, 'message': 'Topic added successfully', 'data': result}), 201
+        else:
+            error_msg = result.get('error', 'Failed to add topic') if isinstance(result, dict) else 'Failed to add topic'
+            return jsonify({'error': error_msg}), 500
+    
+    elif request.method == 'DELETE':
+        # Delete topic
+        topic_id = data.get('topic_id')
+        if not topic_id:
+            return jsonify({'error': 'Topic ID is required'}), 400
+        
+        # Call backend to delete topic
+        success, result = InstructorService.delete_topic_from_course(course_id, topic_id, token)
+        
+        if success:
+            return jsonify({'success': True, 'message': 'Topic deleted successfully'}), 200
+        else:
+            error_msg = result.get('error', 'Failed to delete topic') if isinstance(result, dict) else 'Failed to delete topic'
+            return jsonify({'error': error_msg}), 500
 
 
 @app.route('/logout')

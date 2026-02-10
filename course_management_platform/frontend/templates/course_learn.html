@@ -185,19 +185,33 @@
 
     .content-header {
         margin-bottom: 28px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
     }
 
-    .content-header h1 {
+    .content-header-text h1 {
         font-size: 28px;
         font-weight: 700;
         margin: 0 0 8px 0;
         color: var(--text-color);
     }
 
-    .content-header p {
+    .content-header-text p {
         margin: 0;
         color: var(--text-muted);
         font-size: 15px;
+    }
+
+    .content-header-badge {
+        display: inline-block;
+        background: #e7f5ff;
+        color: #0066cc;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
     }
 
     .alert {
@@ -225,27 +239,6 @@
         border: 1px solid #d3d3d7;
     }
 
-    .content-placeholder {
-        margin-top: 20px;
-        padding: 20px;
-        background: var(--light-color);
-        border: 1px dashed var(--border-color);
-        border-radius: 8px;
-        text-align: center;
-        color: var(--text-muted);
-    }
-
-    .content-placeholder h5 {
-        margin: 0 0 8px 0;
-        font-size: 14px;
-        color: var(--text-color);
-    }
-
-    .content-placeholder p {
-        margin: 0;
-        font-size: 13px;
-    }
-
     .loading-spinner {
         display: flex;
         justify-content: center;
@@ -268,6 +261,170 @@
         to { transform: rotate(360deg); }
     }
 
+    /* Content Sections */
+    .content-section {
+        margin-bottom: 32px;
+    }
+
+    .content-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-color);
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .content-items {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .content-item {
+        background: #f8f9fa;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 16px;
+        transition: all 0.2s ease;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .content-item:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border-color: var(--primary-color);
+    }
+
+    .content-item-info {
+        flex: 1;
+    }
+
+    .content-item-type {
+        display: inline-block;
+        background: var(--primary-color);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .content-item-type.video {
+        background: #ff6b6b;
+    }
+
+    .content-item-type.document {
+        background: #4ecdc4;
+    }
+
+    .content-item-type.presentation {
+        background: #ffe66d;
+        color: #333;
+    }
+
+    .content-item-type.quiz {
+        background: #95e1d3;
+    }
+
+    .content-item-type.exercise {
+        background: #a8e6cf;
+    }
+
+    .content-item-type.resource {
+        background: #ffd3b6;
+        color: #333;
+    }
+
+    .content-item-title {
+        font-weight: 600;
+        font-size: 15px;
+        color: var(--text-color);
+        margin-bottom: 4px;
+    }
+
+    .content-item-desc {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+        line-height: 1.4;
+    }
+
+    .content-item-url {
+        font-size: 12px;
+        word-break: break-all;
+    }
+
+    .content-item-url a {
+        color: var(--primary-color);
+        text-decoration: none;
+        align-items: center;
+        gap: 4px;
+        display: inline-flex;
+    }
+
+    .content-item-url a:hover {
+        text-decoration: underline;
+    }
+
+    .content-item-actions {
+        display: flex;
+        gap: 8px;
+        flex-shrink: 0;
+        margin-left: 12px;
+    }
+
+    .btn-open {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .btn-open:hover {
+        background: #0d5aa7;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(13, 110, 253, 0.3);
+    }
+
+    .empty-state {
+        background: #f8f9fa;
+        border: 1px dashed var(--border-color);
+        border-radius: 8px;
+        padding: 32px;
+        text-align: center;
+        color: var(--text-muted);
+    }
+
+    .empty-state h5 {
+        margin: 0 0 8px 0;
+        font-size: 15px;
+        color: var(--text-color);
+    }
+
+    .empty-state p {
+        margin: 0;
+        font-size: 13px;
+    }
+
     .completion-badge {
         display: inline-block;
         background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
@@ -287,6 +444,42 @@
         margin: 0;
         font-size: 13px;
         opacity: 0.95;
+    }
+
+    .quiz-section {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 24px;
+        border-radius: 8px;
+        text-align: center;
+        margin-top: 24px;
+    }
+
+    .quiz-section h4 {
+        margin: 0 0 8px 0;
+        font-size: 18px;
+    }
+
+    .quiz-section p {
+        margin: 0 0 16px 0;
+        font-size: 14px;
+        opacity: 0.95;
+    }
+
+    .quiz-section button {
+        background: white;
+        color: #28a745;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .quiz-section button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
 </style>
 {% endblock %}
@@ -329,20 +522,47 @@
     <main class="content">
         <div id="contentLoading" class="loading-spinner">
             <div class="spinner"></div>
-            <span>Loading...</span>
+            <span>Loading content...</span>
         </div>
 
         <div id="contentArea" style="display: none;">
+            <!-- Content Header -->
             <div class="content-header">
-                <h1 id="topicTitle"></h1>
-                <p id="topicDesc"></p>
+                <div class="content-header-text">
+                    <h1 id="topicTitle"></h1>
+                    <p id="topicDesc"></p>
+                </div>
+                <div id="headerBadge" class="content-header-badge" style="display: none;"></div>
             </div>
 
+            <!-- Alert Box -->
             <div id="alertBox"></div>
 
-            <div class="content-placeholder">
-                <h5>📖 Topic Content</h5>
-                <p>Course materials for this topic will appear here.</p>
+            <!-- Global Content Section -->
+            <div id="globalContentSection" class="content-section" style="display: none;">
+                <h2 class="section-title">🌍 Course Materials</h2>
+                <div id="globalContentItems" class="content-items"></div>
+            </div>
+
+            <!-- Topic-Specific Content Section -->
+            <div id="topicContentSection" class="content-section" style="display: none;">
+                <h2 class="section-title">📖 Topic Resources</h2>
+                <div id="topicContentItems" class="content-items"></div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <h5>📚 No Content Available</h5>
+                <p>Course materials for this topic will be available soon.</p>
+            </div>
+
+            <!-- Quiz Section (if Final Assessment) -->
+            <div id="quizSection" style="display: none;">
+                <div class="quiz-section">
+                    <h4>🎯 Ready for Final Assessment?</h4>
+                    <p>You've completed all topics. Take the final quiz now!</p>
+                    <button onclick="goToQuiz({{ course.course_id }})">Begin Final Quiz</button>
+                </div>
             </div>
         </div>
     </main>
@@ -357,6 +577,7 @@
     const userId = {{ current_user.user_id }};
     
     let topics = {{ topics | tojson }};
+    let courseContent = {{ course_content | tojson | default([]) }};
     let enrollment = null;
     let currentTopic = null;
 
@@ -393,6 +614,13 @@
             item.className = `topic-item ${isLocked ? 'locked' : ''}`;
 
             if (isFinal) {
+                // For Final Assessment, check if all regular topics are checked in UI
+                const regularTopics = topics.filter(t => t.name !== 'Final Assessment');
+                const allChecked = regularTopics.every(t => {
+                    const checkbox = document.querySelector(`.topic-checkbox[data-id="${t.topic_id}"]`);
+                    return checkbox && checkbox.checked;
+                });
+                
                 item.innerHTML = `
                     <div class="topic-content">
                         <div class="topic-text">
@@ -401,7 +629,7 @@
                         </div>
                         <div class="topic-icon">${isCompleted ? '✓' : ''}</div>
                     </div>
-                    <button class="final-quiz-btn" onclick="goToQuiz(${courseId})" ${isLocked ? 'disabled' : ''}>
+                    <button class="final-quiz-btn" onclick="goToQuiz(${courseId})" ${!allChecked ? 'disabled' : ''}>
                         Start Final Quiz
                     </button>
                 `;
@@ -409,7 +637,7 @@
                 item.innerHTML = `
                     <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; width: 100%;">
                         <input type="checkbox" class="topic-checkbox" data-id="${topic.topic_id}" 
-                               ${isCompleted ? 'checked disabled' : (isNext ? '' : 'disabled')}
+                               ${isCompleted ? 'checked' : (isNext ? '' : 'disabled')}
                                onchange="handleCheck(this)">
                         <div class="topic-text" style="flex: 1;">
                             <div class="topic-name">${topic.name}</div>
@@ -429,21 +657,48 @@
     // Handle checkbox
     async function handleCheck(checkbox) {
         const topicId = parseInt(checkbox.getAttribute('data-id'));
-        
-        if (!checkbox.checked) {
-            checkbox.checked = true;
-            return;
-        }
+        const isChecked = checkbox.checked;
 
-        try {
-            await window.ProgressAPI.updateProgress(courseId, topicId);
-            await loadEnrollment();
-            renderTopics();
-            displayCurrentTopic();
-        } catch (err) {
-            console.error('Failed to save progress:', err);
-            checkbox.checked = false;
-            alert('Failed to save progress. Please try again.');
+        if (isChecked) {
+            // When checking - update backend
+            try {
+                await window.ProgressAPI.updateProgress(courseId, topicId);
+                await loadEnrollment();
+                renderTopics();
+                displayCurrentTopic();
+            } catch (err) {
+                console.error('Failed to save progress:', err);
+                checkbox.checked = false;
+                alert('Failed to save progress. Please try again.');
+            }
+        } else {
+            // When unchecking - rollback to previous topic
+            try {
+                // Call rollback API endpoint
+                const response = await fetch(`/api/progress/rollback/${courseId}/${topicId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'  // Include cookies for session authentication
+                });
+
+                if (response.ok) {
+                    // Reload enrollment to get updated current_topic
+                    await loadEnrollment();
+                    renderTopics();
+                    displayCurrentTopic();
+                } else {
+                    const error = await response.json();
+                    console.error('Failed to rollback progress:', error);
+                    checkbox.checked = true; // Revert checkbox
+                    alert('Failed to rollback progress. Please try again.');
+                }
+            } catch (err) {
+                console.error('Error during rollback:', err);
+                checkbox.checked = true; // Revert checkbox
+                alert('Error rolling back progress. Please try again.');
+            }
         }
     }
 
@@ -451,8 +706,10 @@
     function updateProgressBar() {
         const regularTopics = topics.filter(t => t.name !== 'Final Assessment');
         const total = regularTopics.length;
-        const completed = currentTopic ? 
-            regularTopics.filter(t => t.topic_id <= currentTopic).length : 0;
+        
+        // Count checked checkboxes in the UI
+        const checkedBoxes = document.querySelectorAll('.topic-checkbox:checked');
+        const completed = checkedBoxes.length;
 
         const percent = total > 0 ? (completed / total) * 100 : 0;
         document.getElementById('progressFill').style.width = percent + '%';
@@ -489,19 +746,10 @@
         document.getElementById('topicTitle').textContent = topic.name;
         document.getElementById('topicDesc').textContent = topic.description || 'No description available';
 
+        // Update alert
         let alertHtml = '';
         if (isFinal) {
-            alertHtml = `
-                <div class="completion-badge">
-                    <h4>🎯 Ready for Final Assessment?</h4>
-                    <p>You've completed all topics. Take the final quiz now!</p>
-                </div>
-                <div style="text-align: center; margin-top: 20px;">
-                    <button class="btn btn-success" onclick="goToQuiz(${courseId})" style="padding: 12px 30px; font-weight: 600;">
-                        Begin Final Quiz
-                    </button>
-                </div>
-            `;
+            alertHtml = '<div class="alert alert-success">✅ You\'ve completed all topics! Ready for the final assessment?</div>';
         } else if (isComp) {
             alertHtml = '<div class="alert alert-success">✅ You\'ve completed this topic.</div>';
         } else if (isNext) {
@@ -509,9 +757,64 @@
         } else {
             alertHtml = '<div class="alert alert-secondary">🔒 This topic is locked. Complete previous topics first.</div>';
         }
-
         alertBox.innerHTML = alertHtml;
+
+        // Separate content by global and topic-specific
+        const globalContent = courseContent.filter(item => !item.topic_id || item.topic_id === null);
+        const topicContent = courseContent.filter(item => item.topic_id === topic.topic_id);
+
+        // Display global content
+        const globalSection = document.getElementById('globalContentSection');
+        const topicSection = document.getElementById('topicContentSection');
+        const emptyState = document.getElementById('emptyState');
+        const quizSection = document.getElementById('quizSection');
+
+        globalSection.style.display = globalContent.length > 0 ? 'block' : 'none';
+        topicSection.style.display = topicContent.length > 0 ? 'block' : 'none';
+        emptyState.style.display = (globalContent.length === 0 && topicContent.length === 0) ? 'block' : 'none';
+        quizSection.style.display = isFinal ? 'block' : 'none';
+
+        // Render global content items
+        const globalContainer = document.getElementById('globalContentItems');
+        globalContainer.innerHTML = '';
+        globalContent.forEach(content => {
+            globalContainer.appendChild(createContentItem(content));
+        });
+
+        // Render topic content items
+        const topicContainer = document.getElementById('topicContentItems');
+        topicContainer.innerHTML = '';
+        topicContent.forEach(content => {
+            topicContainer.appendChild(createContentItem(content));
+        });
     }
+
+    // Create content item element
+    function createContentItem(content) {
+        const div = document.createElement('div');
+        div.className = 'content-item';
+
+        const contentType = (content.content_type || 'Other').toLowerCase();
+        const typeLabel = content.content_type || 'Other';
+        
+        div.innerHTML = `
+            <div class="content-item-info">
+                <span class="content-item-type ${contentType}">${typeLabel}</span>
+                <div class="content-item-title">${content.title || 'Untitled'}</div>
+                ${content.description ? `<div class="content-item-desc">${content.description}</div>` : ''}
+                <div class="content-item-url">
+                    <strong>Link: </strong>
+                    <a href="${content.file_url}" target="_blank" rel="noopener noreferrer">
+                        Open Content ↗
+                    </a>
+                </div>
+            </div>
+            <div class="content-item-actions">
+                <a href="${content.file_url}" target="_blank" class="btn-open">🔗 Open</a>
+            </div>
+        `;
+
+        return div;    }
 
     // Go to quiz
     function goToQuiz(courseId) {

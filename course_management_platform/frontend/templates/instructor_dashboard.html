@@ -407,6 +407,9 @@
                         </div>
                         <div class="course-card-actions">
                             <a href="{{ url_for('instructor_course_detail', course_id=course.course_id) }}" class="btn-instructor-action btn-view-course">View Course</a>
+                            {% if course.approval_status == 'Approved' %}
+                            <a href="{{ url_for('instructor_edit_course', course_id=course.course_id) }}" class="btn-instructor-action btn-edit-course" style="background: #17a2b8; border-color: #17a2b8;">Edit Course</a>
+                            {% endif %}
                             <a href="{{ url_for('instructor_course_analytics', course_id=course.course_id) }}" class="btn-instructor-action btn-view-analytics">Analytics</a>
                         </div>
                     </div>

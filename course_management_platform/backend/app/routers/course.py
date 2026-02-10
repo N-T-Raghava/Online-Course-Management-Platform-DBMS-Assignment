@@ -13,6 +13,8 @@ from app.schemas.course_schema import (
 from app.services.course_service import (
     create_university_service,
     get_all_universities_service,
+    get_all_categories_service,
+    get_courses_by_category_service,
     create_course_service,
     get_all_courses_service,
     get_course_by_id_service,
@@ -58,6 +60,35 @@ def get_universities(
     db: Session = Depends(get_db)
 ):
     return get_all_universities_service(db)
+
+
+# ------------------------------------------------------------
+# Get Course Categories → OPEN
+# ------------------------------------------------------------
+@router.get(
+    "/categories",
+    response_model=list[str]
+)
+def get_categories(
+    db: Session = Depends(get_db)
+):
+    """Get all distinct course categories"""
+    return get_all_categories_service(db)
+
+
+# ------------------------------------------------------------
+# Get Courses by Category → OPEN
+# ------------------------------------------------------------
+@router.get(
+    "/courses/category/{category}",
+    response_model=list[CourseResponse]
+)
+def get_courses_by_category(
+    category: str,
+    db: Session = Depends(get_db)
+):
+    """Get all courses for a specific category"""
+    return get_courses_by_category_service(db, category)
 
 
 # ------------------------------------------------------------

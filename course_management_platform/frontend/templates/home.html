@@ -2,46 +2,476 @@
 
 {% block title %}Home - Course Management Platform{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Hero Section */
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 60px 0;
+        margin-bottom: 40px;
+    }
+
+    .hero-section h1 {
+        font-size: 42px;
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+
+    .hero-section p {
+        font-size: 18px;
+        margin-bottom: 24px;
+        opacity: 0.95;
+    }
+
+    .hero-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    /* Main Layout with Sidebar */
+    .courses-wrapper {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 28px;
+        margin-bottom: 40px;
+    }
+
+    @media (max-width: 768px) {
+        .courses-wrapper {
+            grid-template-columns: 1fr;
+        }
+        .sidebar {
+            order: 2;
+        }
+        .courses-content {
+            order: 1;
+        }
+    }
+
+    /* Sidebar */
+    .sidebar {
+        position: sticky;
+        top: 20px;
+        height: fit-content;
+    }
+
+    .filter-panel {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .filter-panel h3 {
+        font-size: 14px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-color);
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--border-color);
+        letter-spacing: 0.5px;
+    }
+
+    .category-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .category-item {
+        padding: 12px 14px;
+        border-radius: 8px;
+        background: var(--light-color);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: var(--text-color);
+        font-size: 14px;
+        font-weight: 500;
+        border: 2px solid transparent;
+        user-select: none;
+    }
+
+    .category-item:hover {
+        background: #f0f7ff;
+        border-color: #667eea;
+    }
+
+    .category-item.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+
+    .btn-clear-filter {
+        width: 100%;
+        margin-top: 16px;
+        padding: 10px;
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 13px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-clear-filter:hover {
+        background: #c82333;
+    }
+
+    /* Search Bar */
+    .search-container {
+        margin-bottom: 24px;
+    }
+
+    .search-bar {
+        position: relative;
+    }
+
+    .search-bar input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        background: white;
+    }
+
+    .search-bar input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    /* Courses Content */
+    .courses-content h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 24px;
+        color: var(--text-color);
+    }
+
+    .courses-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 24px;
+    }
+
+    /* Course Card */
+    .course-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .course-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    }
+
+    .course-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        min-height: 100px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+    }
+
+    .course-category {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        opacity: 0.85;
+        margin-bottom: 6px;
+        letter-spacing: 0.5px;
+    }
+
+    .course-title {
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.4;
+        margin: 0;
+    }
+
+    .course-body {
+        padding: 20px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .course-level {
+        display: inline-block;
+        font-size: 12px;
+        padding: 4px 8px;
+        background: #f0f7ff;
+        color: #667eea;
+        border-radius: 4px;
+        margin-bottom: 12px;
+        width: fit-content;
+        font-weight: 600;
+    }
+
+    .course-description {
+        font-size: 13px;
+        color: var(--text-muted);
+        line-height: 1.5;
+        margin-bottom: 12px;
+        flex-grow: 1;
+    }
+
+    .course-meta {
+        display: flex;
+        gap: 12px;
+        font-size: 12px;
+        color: var(--text-muted);
+        padding-top: 12px;
+        border-top: 1px solid var(--border-color);
+        margin-bottom: 16px;
+    }
+
+    .course-meta-item {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+    }
+
+    .course-action {
+        margin-top: auto;
+    }
+
+    .btn-view-course {
+        width: 100%;
+        padding: 10px 16px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 13px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-view-course:hover {
+        background: #764ba2;
+        transform: translateY(-2px);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .empty-state h4 {
+        font-size: 20px;
+        margin-bottom: 8px;
+        color: var(--text-color);
+    }
+
+    .empty-state p {
+        color: var(--text-muted);
+        margin-bottom: 20px;
+    }
+
+    /* Results Counter */
+    .results-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding: 12px 0;
+    }
+
+    .results-count {
+        font-size: 14px;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="hero" style="padding:60px 0;">
-    <div class="container text-center">
-        <h1 style="font-size:36px;">Course Management Platform</h1>
-        <p style="color:var(--text-muted); margin:12px 0 20px;">Discover high-quality courses, learn at your pace, and advance your career.</p>
-        <div style="display:flex; gap:12px; justify-content:center;">
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <h1>Discover Your Next Course</h1>
+        <p>Learn new skills from industry experts, at your own pace.</p>
+        <div class="hero-buttons">
             {% if not session.get('token') %}
             <a href="/login" class="btn btn-primary">Login</a>
             <a href="/register" class="btn btn-secondary">Register</a>
             {% endif %}
-            <a href="#courses" class="btn btn-success">Browse Courses</a>
+            <a href="#courses-section" class="btn btn-light">Explore Courses</a>
         </div>
     </div>
 </section>
 
-<section id="courses" style="padding:40px 0;">
-    <div class="container">
-        <h2 style="margin-bottom:18px;">Explore Courses</h2>
-        <div class="row g-4">
-            {% for course in courses %}
-            <div class="col-12 col-sm-6 col-lg-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ course.title }}</h5>
-                        <p class="card-text text-muted">{{ course.category or 'General' }} • {{ course.level or 'All' }}</p>
-                        <p class="card-text">{{ course.description[:140] }}{% if course.description|length > 140 %}...{% endif %}</p>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
-                            <small class="text-muted">Duration: {{ course.duration or 'N/A' }}</small>
-                            <a href="/courses/{{ course.course_id }}" class="btn btn-primary btn-small">View Details</a>
-                        </div>
+<!-- Main Content -->
+<section id="courses-section" class="container">
+    <div class="courses-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="filter-panel">
+                <h3>🔍 Filter by Category</h3>
+                
+                <div class="search-container">
+                    <div class="search-bar">
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            placeholder="Search courses..." 
+                            onkeyup="filterBySearch()"
+                        >
                     </div>
                 </div>
+
+                {% if categories %}
+                <div class="category-list" id="categoryList">
+                    {% for category in categories %}
+                    <div class="category-item" onclick="filterByCategory('{{ category }}')">
+                        {{ category }}
+                    </div>
+                    {% endfor %}
+                </div>
+                <button class="btn-clear-filter" onclick="clearFilters()">Clear Filters</button>
+                {% else %}
+                <p style="color: var(--text-muted); font-size: 13px;">No categories available</p>
+                {% endif %}
             </div>
-            {% else %}
-            <div class="col-12">
-                <div class="alert alert-info">No courses available right now.</div>
+        </aside>
+
+        <!-- Courses Content -->
+        <div class="courses-content">
+            <h2>Available Courses</h2>
+            
+            <div class="results-info">
+                <span class="results-count" id="resultsCount">Showing all courses</span>
             </div>
-            {% endfor %}
+
+            <div class="courses-grid" id="coursesGrid">
+                {% if courses %}
+                    {% for course in courses %}
+                    <div class="course-card" data-category="{{ course.category or 'General' }}" data-title="{{ course.title|lower }}">
+                        <div class="course-header">
+                            <div class="course-category">{{ course.category or 'General' }}</div>
+                            <h3 class="course-title">{{ course.title }}</h3>
+                        </div>
+                        <div class="course-body">
+                            {% if course.level %}
+                            <span class="course-level">{{ course.level }}</span>
+                            {% endif %}
+                            <p class="course-description">{{ course.description[:120] }}{% if course.description and course.description|length > 120 %}...{% endif %}</p>
+                            <div class="course-meta">
+                                {% if course.duration %}
+                                <div class="course-meta-item">
+                                    <span>⏱</span>
+                                    <span>{{ course.duration }}h</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="course-action">
+                                <a href="/courses/{{ course.course_id }}" class="btn-view-course">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="empty-state" style="grid-column: 1/-1;">
+                    <h4>No courses available</h4>
+                    <p>Check back soon for new courses!</p>
+                </div>
+                {% endif %}
+            </div>
         </div>
     </div>
 </section>
+{% endblock %}
 
+{% block extra_js %}
+<script>
+    let allCourses = [];
+    let selectedCategory = null;
+
+    // Store all courses for filtering
+    document.addEventListener('DOMContentLoaded', () => {
+        const courseCards = document.querySelectorAll('.course-card');
+        allCourses = Array.from(courseCards).map(card => ({
+            element: card,
+            category: card.getAttribute('data-category'),
+            title: card.getAttribute('data-title')
+        }));
+    });
+
+    function filterByCategory(category) {
+        selectedCategory = selectedCategory === category ? null : category;
+        updateCategoryUI();
+        applyFilters();
+    }
+
+    function filterBySearch() {
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const searchInput = document.getElementById('searchInput').value.toLowerCase();
+        let visibleCount = 0;
+
+        allCourses.forEach(course => {
+            const matchesCategory = !selectedCategory || course.category === selectedCategory;
+            const matchesSearch = course.title.includes(searchInput);
+            const isVisible = matchesCategory && matchesSearch;
+
+            course.element.style.display = isVisible ? 'flex' : 'none';
+            if (isVisible) visibleCount++;
+        });
+
+        // Update results counter
+        const resultsCount = document.getElementById('resultsCount');
+        if (visibleCount === 0) {
+            resultsCount.textContent = 'No courses match your filter';
+        } else if (selectedCategory) {
+            resultsCount.textContent = `Showing ${visibleCount} course(s) in "${selectedCategory}"`;
+        } else if (searchInput) {
+            resultsCount.textContent = `Found ${visibleCount} course(s) matching "${searchInput}"`;
+        } else {
+            resultsCount.textContent = `Showing all ${visibleCount} course(s)`;
+        }
+    }
+
+    function updateCategoryUI() {
+        const categoryItems = document.querySelectorAll('.category-item');
+        categoryItems.forEach(item => {
+            if (selectedCategory && item.textContent.trim() === selectedCategory) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+    }
+
+    function clearFilters() {
+        selectedCategory = null;
+        document.getElementById('searchInput').value = '';
+        document.querySelectorAll('.category-item').forEach(item => item.classList.remove('active'));
+        applyFilters();
+    }
+</script>
 {% endblock %}
