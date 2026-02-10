@@ -529,12 +529,16 @@
                 {% for student in enrolled_students %}
                 <li class="student-item">
                     <div class="student-info">
-                        <h6>{{ student.name }}</h6>
+                        <h6>{{ student.student_name }}</h6>
                         <p>Enrolled: {{ student.enrollment_date or 'N/A' }}</p>
+                        <p style="font-size:12px;color:var(--text-muted);">{{ student.student_email or '' }}</p>
                     </div>
-                    <span class="progress-badge {% if student.completion_status == 'Completed' %}progress-completed{% elif student.completion_status == 'In Progress' %}progress-ongoing{% else %}progress-pending{% endif %}">
-                        {{ student.completion_status or 'Enrolled' }}
-                    </span>
+                    <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+                        <button class="btn btn-sm btn-primary" onclick="openStudentProfile({{ student.student_user_id }})" style="padding:6px 10px;">View Profile</button>
+                        <span class="progress-badge {% if student.completion_status == 'Completed' %}progress-completed{% elif student.completion_status == 'In Progress' %}progress-ongoing{% else %}progress-pending{% endif %}">
+                            {{ student.completion_status or 'Enrolled' }}
+                        </span>
+                    </div>
                 </li>
                 {% endfor %}
             </ul>
@@ -673,6 +677,18 @@
             }
         })
         .catch(error => console.error('Error:', error));
+    }
+
+    // Open student profile (sets selected student and token, then navigates)
+    function openStudentProfile(studentId) {
+        try {
+            localStorage.setItem('selectedStudentId', studentId);
+            // store the current session token so the profile page can fetch data
+            localStorage.setItem('adminToken', '{{ token | escape }}');
+        } catch (e) {
+            console.warn('Could not save student id to localStorage', e);
+        }
+        window.location.href = '/student-profile';
     }
 
     // Initialize charts

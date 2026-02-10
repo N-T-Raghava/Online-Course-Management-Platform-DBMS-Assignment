@@ -790,14 +790,27 @@ def instructor_course_detail(course_id: int):
     if not reviews_success:
         reviews = []
     
+    # Fetch enrolled students (instructor-scoped) via service (handle wrapper response)
+    students_success, students_resp = InstructorService.get_course_students(course_id, token)
+    if students_success and students_resp:
+        if isinstance(students_resp, dict) and 'students' in students_resp:
+            enrolled_students = students_resp.get('students') or []
+        elif isinstance(students_resp, list):
+            enrolled_students = students_resp
+        else:
+            enrolled_students = []
+    else:
+        enrolled_students = []
+
     return render_template('instructor_course_detail.html',
         course=course,
         analytics=analytics_data,
         course_content=content,
         topics=topics,
         course_reviews=reviews,
-        enrolled_students=[],
-        user={'user_id': user_id}
+        enrolled_students=enrolled_students,
+        user={'user_id': user_id},
+        token=token
     )
 
 
@@ -1122,6 +1135,19 @@ def admin_student_profile():
     
     # Just serve the template - all data loading is done client-side
     return render_template('student_profile.html', token=token, user_id=user_id, admin_level=admin_level)
+
+
+@app.route('/student-profile')
+def student_profile_view():
+    """Student profile view for non-admin users (instructors can use this)."""
+    if 'token' not in session:
+        return redirect(url_for('login'))
+
+    token = session.get('token')
+    user_id = session.get('user_id')
+
+    # Serve same template as admin view but without admin guard
+    return render_template('student_profile.html', token=token, user_id=user_id)
 
 
 @app.route('/admin/senior/dashboard')

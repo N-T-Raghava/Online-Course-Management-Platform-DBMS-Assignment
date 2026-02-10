@@ -9,6 +9,7 @@ from app.models.student import Student
 from app.models.instructor import Instructor
 from app.models.student import Student
 from app.models.course import Course
+from app.models.enrollment import Enrollment
 
 # COURSE STATISTICS SERVICE
 
@@ -135,17 +136,58 @@ def update_instructor_statistics_service(
 
 def get_course_statistics_service(db: Session, course_id: int):
 
+    # Try to fetch precomputed stats row (may exist), but also compute a few live values
     stats = db.query(Statistics).filter(
         Statistics.course_id == course_id
     ).first()
 
-    if not stats:
-        raise HTTPException(
-            status_code=404,
-            detail="Course statistics not found"
-        )
+    # Live calculations from enrollments
+    from sqlalchemy import func
+    total = db.query(func.count()).filter(Enrollment.course_id == course_id).scalar() or 0
+    completed = db.query(func.count()).filter(
+        Enrollment.course_id == course_id,
+        Enrollment.completion_status == 'Completed'
+    ).scalar() or 0
+    active = db.query(func.count()).filter(
+        Enrollment.course_id == course_id,
+        Enrollment.completion_status != 'Completed'
+    ).scalar() or 0
 
-    return stats
+    avg_rating = db.query(func.avg(Enrollment.rating)).filter(
+        Enrollment.course_id == course_id,
+        Enrollment.rating.isnot(None)
+    ).scalar()
+    # avg_rating may be None if no ratings
+    if avg_rating is not None:
+        avg_rating = round(float(avg_rating), 2)
+
+    # If no precomputed stats exist, compute basic completion rate
+    if not stats:
+        completion_rate = round((completed / total * 100), 2) if total > 0 else 0
+        return {
+            'total_enrollments': total,
+            'active_enrollments': active,
+            'completion_rate': completion_rate,
+            'average_completion_time': None,
+            'completed_students': completed,
+            'active_students': active,
+            'pending_students': total - completed,
+            'average_rating': avg_rating if avg_rating is not None else 0
+        }
+
+    # Build response merging stored stats and live values
+    response = {
+        'total_enrollments': stats.total_enrollments or total,
+        'active_enrollments': stats.active_enrollments or active,
+        'completion_rate': float(stats.completion_rate) if stats.completion_rate is not None else (round((completed / total * 100), 2) if total > 0 else 0),
+        'average_completion_time': stats.average_completion_time,
+        'completed_students': completed,
+        'active_students': active,
+        'pending_students': total - completed,
+        'average_rating': avg_rating if avg_rating is not None else 0
+    }
+
+    return response
 
 
 def get_student_statistics_service(

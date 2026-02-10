@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from app.database import get_db
 
 # Guards
-from app.core.role_guards import require_admin_level
-from app.core.roles import AdminLevel
+from app.core.role_guards import require_admin_level, require_role
+from app.core.roles import AdminLevel, Role
+from app.core.dependencies import get_current_user
 
 # Services
 from app.services.admin_service import (
@@ -191,12 +192,18 @@ def get_course_students(
 
 
 # ============================================================
-# GET STUDENT PROFILE → Junior Admin
+# GET STUDENT PROFILE → Admin or Instructor
 # ============================================================
 @router.get("/students/{student_user_id}")
 def get_student_profile(
     student_user_id: int,
     db: Session = Depends(get_db),
-    admin = Depends(require_admin_level(AdminLevel.JUNIOR))
+    current_user: dict = Depends(get_current_user)
 ):
+    """Get student profile (accessible by admins and instructors)"""
+    user_role = current_user.get('role', '').lower()
+    # Allow admin or instructor role
+    if user_role not in [Role.ADMIN.value.lower(), Role.INSTRUCTOR.value.lower()]:
+        raise HTTPException(status_code=403, detail='Permission denied')
+    
     return get_student_profile_service(db, student_user_id)

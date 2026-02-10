@@ -224,9 +224,11 @@ def get_course_ratings_admin_service(db: Session, course_id: int):
     ratings_data = []
     for enrollment in enrollments:
         if enrollment.rating is not None or enrollment.review_text is not None:
+            # Resolve student user from student_user_id (Enrollment has no relationship property)
             student_name = "Anonymous"
-            if enrollment.student and enrollment.student.user:
-                student_name = f"{enrollment.student.user.first_name} {enrollment.student.user.last_name}"
+            student_user = db.query(User).filter(User.user_id == enrollment.student_user_id).first()
+            if student_user:
+                student_name = f"{student_user.name}"
             
             ratings_data.append({
                 "student_id": enrollment.student_user_id,

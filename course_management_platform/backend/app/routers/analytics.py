@@ -17,6 +17,14 @@ from app.services.statistics_service import (
     recompute_all_courses_service,
     recompute_platform_service
 )
+from app.core.dependencies import get_current_user
+from app.core.role_guards import require_role
+from app.core.roles import Role
+from app.services.admin_service import get_course_students_service
+from app.services.admin_service import get_student_profile_service
+from app.models.teaching import Teaching
+from app.models.enrollment import Enrollment
+from app.models.user import User
 
 # Router Config
 
@@ -38,6 +46,65 @@ def get_course_analytics(
         db,
         course_id
     )
+
+
+@router.get('/courses/{course_id}/students')
+def get_course_students_for_instructor(
+    course_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Return students enrolled in a course for the instructor assigned to it."""
+    # Ensure requester is the instructor for this course
+    user_role = current_user.get('role', '').lower()
+    if user_role != Role.INSTRUCTOR.value.lower():
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail='Only instructors can access this endpoint')
+
+    # Verify teaching assignment
+    teaching = db.query(Teaching).filter(
+        Teaching.course_id == course_id,
+        Teaching.instructor_user_id == current_user.get('user_id')
+    ).first()
+
+    if not teaching:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail='You are not assigned to this course')
+
+    # Reuse admin service implementation to fetch students (service is not tied to admin guard)
+    return get_course_students_service(db, course_id)
+
+
+# Instructor: view a specific student profile if the instructor teaches one of the student's courses
+@router.get('/instructor/students/{student_user_id}')
+def get_student_profile_for_instructor(
+    student_user_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    user_role = (current_user.get('role') or '').lower()
+    if user_role != Role.INSTRUCTOR.value.lower():
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail='Only instructors can access this endpoint')
+
+    # Get list of course_ids the instructor teaches
+    teaching_courses = db.query(Teaching.course_id).filter(
+        Teaching.instructor_user_id == current_user.get('user_id')
+    ).all()
+
+    teaching_course_ids = {t[0] for t in teaching_courses}
+
+    # Check if student is enrolled in any of these courses
+    enrollment_exists = db.query(Enrollment).filter(
+        Enrollment.student_user_id == student_user_id,
+        Enrollment.course_id.in_(list(teaching_course_ids))
+    ).first() if teaching_course_ids else None
+
+    if not enrollment_exists:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail='You are not assigned to any course this student is enrolled in')
+
+    return get_student_profile_service(db, student_user_id)
 
 
 # ---------------- Student Stats -------------------

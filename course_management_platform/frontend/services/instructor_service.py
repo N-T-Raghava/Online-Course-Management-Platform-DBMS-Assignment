@@ -161,6 +161,21 @@ class InstructorService:
             return False, None
         except requests.exceptions.RequestException as e:
             return False, None
+
+    @staticmethod
+    def get_course_students(course_id: int, token: str) -> Tuple[bool, Any]:
+        """Fetch enrolled students for a course (instructor access)"""
+        try:
+            resp = requests.get(
+                f"{BACKEND_URL}/analytics/courses/{course_id}/students",
+                headers={'Authorization': f'Bearer {token}'},
+                timeout=10
+            )
+            if resp.status_code == 200:
+                return True, resp.json()
+            return False, []
+        except requests.exceptions.RequestException:
+            return False, []
     
     @staticmethod
     def recompute_instructor_stats(user_id: int, token: str) -> Tuple[bool, Any]:

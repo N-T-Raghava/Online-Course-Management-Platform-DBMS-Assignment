@@ -78,7 +78,7 @@
         .tabs {
             display: flex;
             gap: 1rem;
-            margin-bottom: 2rem;
+            margin-bottom: 2.5rem;
             border-bottom: 3px solid #ddd;
             overflow-x: auto;
         }
@@ -124,8 +124,8 @@
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            gap: 2rem;
+            margin-bottom: 3rem;
         }
 
         .stat-card {
@@ -182,18 +182,24 @@
         /* Charts Section */
         .charts-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2.5rem;
+            margin-bottom: 3rem;
         }
 
         .chart-container {
             background: white;
             border-radius: 10px;
-            padding: 1.8rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            max-height: 420px;
-            overflow: hidden;
+            padding: 2rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-wrapper {
+            flex: 1;
+            position: relative;
+            min-height: 350px;
         }
 
         .chart-title {
@@ -209,9 +215,10 @@
         .table-container {
             background: white;
             border-radius: 10px;
-            padding: 1.8rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 2rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
             overflow-x: auto;
+            margin-bottom: 2rem;
         }
 
         .table-title {
@@ -262,6 +269,23 @@
         .clickable-row:hover {
             background: #eef5ff;
             box-shadow: inset 3px 0 0 #2c3e50;
+        }
+
+        .btn-view {
+            padding: 0.5rem 1.2rem;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .btn-view:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
         }
 
         /* Badges and Status */
@@ -472,11 +496,17 @@
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
+
+            .chart-wrapper {
+                min-height: 300px;
+            }
         }
 
         @media (max-width: 768px) {
             .navbar {
                 padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
             }
 
             .navbar h1 {
@@ -485,10 +515,13 @@
 
             .navbar-right {
                 gap: 1rem;
+                width: 100%;
+                justify-content: space-between;
             }
 
             .tabs {
                 gap: 0.5rem;
+                margin-bottom: 2rem;
             }
 
             .tab-button {
@@ -498,6 +531,8 @@
 
             .stats-grid {
                 grid-template-columns: 1fr;
+                gap: 1.5rem;
+                margin-bottom: 2rem;
             }
 
             .stat-value {
@@ -505,8 +540,34 @@
             }
 
             .container {
-                margin: 1rem auto;
+                margin: 1.5rem auto;
                 padding: 0 1rem;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+                margin-bottom: 2rem;
+            }
+
+            .chart-container {
+                padding: 1.5rem;
+            }
+
+            .table-container {
+                padding: 1.5rem;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 0.8rem;
+            }
+
+            .chart-wrapper {
+                min-height: 250px;
             }
         }
     </style>
@@ -553,11 +614,15 @@
             <div class="charts-grid">
                 <div class="chart-container">
                     <div class="chart-title">Courses Distribution</div>
-                        <canvas id="coursesChart" height="300"></canvas>
+                    <div class="chart-wrapper">
+                        <canvas id="coursesChart"></canvas>
+                    </div>
                 </div>
                 <div class="chart-container">
                     <div class="chart-title">Enrollment Status</div>
-                        <canvas id="enrollmentChart" height="300"></canvas>
+                    <div class="chart-wrapper">
+                        <canvas id="enrollmentChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -598,11 +663,15 @@
             <div class="charts-grid">
                 <div class="chart-container">
                     <div class="chart-title">Student Progress Distribution</div>
-                    <canvas id="studentProgressChart" height="300"></canvas>
+                    <div class="chart-wrapper">
+                        <canvas id="studentProgressChart"></canvas>
+                    </div>
                 </div>
                 <div class="chart-container">
                     <div class="chart-title">Top Students by Enrollment</div>
-                    <canvas id="topStudentsChart" height="300"></canvas>
+                    <div class="chart-wrapper">
+                        <canvas id="topStudentsChart"></canvas>
+                    </div>
                 </div>
             </div>
 
@@ -873,8 +942,8 @@
                     }]
                 },
                 options: {
-                        responsive: true,
-                        maintainAspectRatio: true,
+                    responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: { position: 'bottom' }
                     }
@@ -898,7 +967,7 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: { display: false }
                     },
@@ -932,7 +1001,7 @@
                     </td>
                     <td>${course.average_rating.toFixed(1)} ⭐</td>
                     <td>${course.total_instructors}</td>
-                    <td><button class="btn-view" style="padding: 0.4rem 0.8rem; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">View</button></td>
+                    <td><button class="btn-view">View</button></td>
                 </tr>
             `).join('');
 
@@ -949,14 +1018,14 @@
             }
 
             const html = students.map(student => `
-                <tr class="clickable-row" onclick="loadStudentProfile(${student.student_user_id})">
+                <tr>
                     <td><strong>${student.name}</strong></td>
                     <td>${student.email}</td>
                     <td>${student.total_enrollments}</td>
                     <td><span class="badge badge-success">${student.completed_courses}</span></td>
                     <td><span class="badge badge-warning">${student.active_courses}</span></td>
                     <td>${student.average_rating.toFixed(1)} ⭐</td>
-                    <td><button class="btn-view" style="padding: 0.4rem 0.8rem; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">Profile</button></td>
+                    <td><button class="btn-view" onclick="openStudentProfile(${student.student_user_id})">Profile</button></td>
                 </tr>
             `).join('');
 
@@ -995,7 +1064,7 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: { position: 'bottom' }
                     }
@@ -1021,7 +1090,7 @@
                 options: {
                     indexAxis: 'y',
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: { display: false }
                     },
@@ -1061,6 +1130,16 @@
         }
 
         // Modal Functions
+        function openStudentProfile(studentId) {
+            try {
+                localStorage.setItem('selectedStudentId', studentId);
+                localStorage.setItem('adminToken', token);
+            } catch (e) {
+                console.warn('Could not save student id to localStorage', e);
+            }
+            window.location.href = '/student-profile';
+        }
+
         async function loadStudentProfile(studentId) {
             try {
                 const student = studentsData.students.find(s => s.student_user_id === studentId);

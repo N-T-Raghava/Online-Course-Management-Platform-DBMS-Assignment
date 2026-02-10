@@ -338,11 +338,21 @@
             }
 
             try {
-                const response = await fetch(`${API_URL}/admin/students/${studentId}`, {
+                // First try admin endpoint
+                let response = await fetch(`${API_URL}/admin/students/${studentId}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
+                // If forbidden for admin, try analyst-specific endpoint
+                if (response.status === 403) {
+                    response = await fetch(`${API_URL}/analyst/students/${studentId}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                }
+
                 if (!response.ok) {
+                    const text = await response.text();
+                    console.error('Failed to load student profile response:', response.status, text);
                     showError('Failed to load student profile');
                     document.getElementById('loadingArea').style.display = 'none';
                     return;
