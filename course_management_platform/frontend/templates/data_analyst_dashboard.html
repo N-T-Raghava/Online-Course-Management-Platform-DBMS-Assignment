@@ -612,12 +612,7 @@
 
             <!-- Charts -->
             <div class="charts-grid">
-                <div class="chart-container">
-                    <div class="chart-title">Courses Distribution</div>
-                    <div class="chart-wrapper">
-                        <canvas id="coursesChart"></canvas>
-                    </div>
-                </div>
+                <!-- Courses Distribution removed - keeping Enrollment Status only -->
                 <div class="chart-container">
                     <div class="chart-title">Enrollment Status</div>
                     <div class="chart-wrapper">
@@ -768,7 +763,6 @@
         let instructorsData = null;
 
         // Chart instances
-        let coursesChartInstance = null;
         let enrollmentChartInstance = null;
         let studentProgressChartInstance = null;
         let topStudentsChartInstance = null;
@@ -918,39 +912,7 @@
         }
 
         function renderOverviewCharts() {
-            // Courses Chart
-            const ctx1 = document.getElementById('coursesChart').getContext('2d');
-            if (coursesChartInstance) coursesChartInstance.destroy();
-            
-            const coursesByCategory = {};
-            if (coursesData) {
-                coursesData.courses.forEach(course => {
-                    coursesByCategory[course.category] = (coursesByCategory[course.category] || 0) + 1;
-                });
-            }
-
-            coursesChartInstance = new Chart(ctx1, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(coursesByCategory),
-                    datasets: [{
-                        data: Object.values(coursesByCategory),
-                        backgroundColor: [
-                            '#3498db', '#e74c3c', '#f39c12', '#2ecc71', 
-                            '#9b59b6', '#1abc9c', '#e67e22', '#34495e'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom' }
-                    }
-                }
-            });
-
-            // Enrollment Status Chart
+            // Enrollment Status Chart (only)
             const ctx2 = document.getElementById('enrollmentChart').getContext('2d');
             if (enrollmentChartInstance) enrollmentChartInstance.destroy();
 
