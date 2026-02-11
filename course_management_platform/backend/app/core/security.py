@@ -1,16 +1,37 @@
-# Plain text password storage (no hashing)
-# Password is stored directly as entered by user
+from passlib.context import CryptContext
+
+# ---------------------------------------------------
+# Password Hashing Config
+# ---------------------------------------------------
+
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto"
+)
+
+# ---------------------------------------------------
+# Hash Password
+# ---------------------------------------------------
 
 def store_password(password: str) -> str:
     """
-    Store password as plain text (no hashing).
-    Returns the password as-is.
+    Hash a plain password using bcrypt.
     """
-    return password
+    return pwd_context.hash(password)
 
 
-def verify_password(plain_password: str, stored_password: str) -> bool:
+# ---------------------------------------------------
+# Verify Password
+# ---------------------------------------------------
+
+def verify_password(
+    plain_password: str,
+    hashed_password: str
+) -> bool:
     """
-    Compare plain text passwords directly.
+    Verify plain password against hash.
     """
-    return plain_password == stored_password
+    return pwd_context.verify(
+        plain_password,
+        hashed_password
+    )

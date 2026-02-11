@@ -8,7 +8,7 @@
     .hero-section {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 60px 0;
+        padding: 60px 0 80px 0;
         margin-bottom: 40px;
     }
 
@@ -20,83 +20,115 @@
 
     .hero-section p {
         font-size: 18px;
-        margin-bottom: 24px;
+        margin-bottom: 36px;
         opacity: 0.95;
     }
 
-    .hero-buttons {
-        display: flex;
-        gap: 12px;
-        justify-content: center;
-        flex-wrap: wrap;
+    /* Search Box in Hero */
+    .hero-search-box {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        max-width: 600px;
+        margin: 0 auto;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
     }
 
-    /* Main Layout with Sidebar */
+    .hero-search-bar {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .hero-search-bar input {
+        width: 100%;
+        padding: 14px 18px;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+        background: #f8f9fa;
+        transition: all 0.2s ease;
+    }
+
+    .hero-search-bar input::placeholder {
+        color: #999;
+    }
+
+    .hero-search-bar input:focus {
+        outline: none;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .hero-search-icon {
+        position: absolute;
+        right: 18px;
+        color: #667eea;
+        font-size: 18px;
+        cursor: pointer;
+        pointer-events: none;
+    }
+
+    .hero-buttons {
+        display: none;
+    }
+
+    /* Main Layout */
     .courses-wrapper {
-        display: grid;
-        grid-template-columns: 280px 1fr;
+        display: flex;
+        flex-direction: column;
         gap: 28px;
         margin-bottom: 40px;
     }
 
-    @media (max-width: 768px) {
-        .courses-wrapper {
-            grid-template-columns: 1fr;
-        }
-        .sidebar {
-            order: 2;
-        }
-        .courses-content {
-            order: 1;
-        }
-    }
-
-    /* Sidebar */
+    /* Sidebar hidden */
     .sidebar {
-        position: sticky;
-        top: 20px;
-        height: fit-content;
+        display: none;
     }
 
-    .filter-panel {
+    /* Filter Bar at Top */
+    .filter-bar {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 24px;
+        padding: 16px;
         background: white;
-        border-radius: 12px;
-        padding: 24px;
+        border-radius: 10px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        flex-wrap: wrap;
     }
 
-    .filter-panel h3 {
-        font-size: 14px;
-        font-weight: 700;
+    .filter-label {
+        font-weight: 600;
+        font-size: 13px;
         text-transform: uppercase;
         color: var(--text-color);
-        margin-bottom: 20px;
-        padding-bottom: 12px;
-        border-bottom: 2px solid var(--border-color);
         letter-spacing: 0.5px;
     }
 
     .category-list {
         display: flex;
-        flex-direction: column;
         gap: 8px;
+        flex-wrap: wrap;
     }
 
     .category-item {
-        padding: 12px 14px;
-        border-radius: 8px;
-        background: var(--light-color);
+        padding: 8px 14px;
+        border-radius: 6px;
+        background: #f0f7ff;
         cursor: pointer;
         transition: all 0.2s ease;
         color: var(--text-color);
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 500;
-        border: 2px solid transparent;
+        border: 2px solid #f0f7ff;
         user-select: none;
+        white-space: nowrap;
     }
 
     .category-item:hover {
-        background: #f0f7ff;
+        background: #e0ecff;
         border-color: #667eea;
     }
 
@@ -107,49 +139,44 @@
     }
 
     .btn-clear-filter {
-        width: 100%;
-        margin-top: 16px;
-        padding: 10px;
-        background: #dc3545;
-        color: white;
-        border: none;
+        padding: 8px 16px;
+        background: white;
+        color: #dc3545;
+        border: 2px solid #dc3545;
         border-radius: 6px;
         cursor: pointer;
         font-weight: 600;
-        font-size: 13px;
+        font-size: 12px;
         transition: all 0.2s ease;
+        margin-left: auto;
     }
 
     .btn-clear-filter:hover {
-        background: #c82333;
+        background: #dc3545;
+        color: white;
     }
 
-    /* Search Bar */
+    .filter-panel {
+        display: none;
+    }
+
     .search-container {
-        margin-bottom: 24px;
+        display: none;
     }
 
     .search-bar {
-        position: relative;
+        display: none;
     }
 
     .search-bar input {
-        width: 100%;
-        padding: 12px 16px;
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        font-size: 14px;
-        transition: all 0.2s ease;
-        background: white;
-    }
-
-    .search-bar input:focus {
-        outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        display: none;
     }
 
     /* Courses Content */
+    .courses-content {
+        width: 100%;
+    }
+
     .courses-content h2 {
         font-size: 24px;
         font-weight: 700;
@@ -305,6 +332,30 @@
         color: var(--text-muted);
         font-weight: 500;
     }
+
+    @media (max-width: 768px) {
+        .filter-bar {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .btn-clear-filter {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        .hero-search-box {
+            padding: 16px;
+        }
+
+        .hero-section h1 {
+            font-size: 32px;
+        }
+
+        .hero-section p {
+            font-size: 16px;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -312,14 +363,18 @@
 <!-- Hero Section -->
 <section class="hero-section">
     <div class="container">
-        <h1>Discover Your Next Course</h1>
-        <p>Learn new skills from industry experts, at your own pace.</p>
-        <div class="hero-buttons">
-            {% if not session.get('token') %}
-            <a href="/login" class="btn btn-primary">Login</a>
-            <a href="/register" class="btn btn-secondary">Register</a>
-            {% endif %}
-            <a href="#courses-section" class="btn btn-light">Explore Courses</a>
+        <h1 class = 'pad'>Discover Your Next Course</h1>
+        <p class = 'pad'>Learn new skills from industry experts, at your own pace.</p>
+        <div class="hero-search-box">
+            <div class="hero-search-bar">
+                <input 
+                    type="text" 
+                    id="heroSearchInput" 
+                    placeholder="Search courses by name, topic, or skill..." 
+                    onkeyup="filterBySearch()"
+                >
+                <i class="hero-search-icon fas fa-search"></i>
+            </div>
         </div>
     </div>
 </section>
@@ -327,36 +382,20 @@
 <!-- Main Content -->
 <section id="courses-section" class="container">
     <div class="courses-wrapper">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="filter-panel">
-                <h3>🔍 Filter by Category</h3>
-                
-                <div class="search-container">
-                    <div class="search-bar">
-                        <input 
-                            type="text" 
-                            id="searchInput" 
-                            placeholder="Search courses..." 
-                            onkeyup="filterBySearch()"
-                        >
-                    </div>
+        <!-- Filter Bar at Top -->
+        {% if categories %}
+        <div class="filter-bar">
+            <span class="filter-label">Filter by:</span>
+            <div class="category-list" id="categoryList">
+                {% for category in categories %}
+                <div class="category-item" onclick="filterByCategory('{{ category }}')">
+                    {{ category }}
                 </div>
-
-                {% if categories %}
-                <div class="category-list" id="categoryList">
-                    {% for category in categories %}
-                    <div class="category-item" onclick="filterByCategory('{{ category }}')">
-                        {{ category }}
-                    </div>
-                    {% endfor %}
-                </div>
-                <button class="btn-clear-filter" onclick="clearFilters()">Clear Filters</button>
-                {% else %}
-                <p style="color: var(--text-muted); font-size: 13px;">No categories available</p>
-                {% endif %}
+                {% endfor %}
             </div>
-        </aside>
+            <button class="btn-clear-filter" onclick="clearFilters()">Clear Filters</button>
+        </div>
+        {% endif %}
 
         <!-- Courses Content -->
         <div class="courses-content">
@@ -431,7 +470,7 @@
     }
 
     function applyFilters() {
-        const searchInput = document.getElementById('searchInput').value.toLowerCase();
+        const searchInput = document.getElementById('heroSearchInput').value.toLowerCase();
         let visibleCount = 0;
 
         allCourses.forEach(course => {
@@ -469,7 +508,7 @@
 
     function clearFilters() {
         selectedCategory = null;
-        document.getElementById('searchInput').value = '';
+        document.getElementById('heroSearchInput').value = '';
         document.querySelectorAll('.category-item').forEach(item => item.classList.remove('active'));
         applyFilters();
     }
